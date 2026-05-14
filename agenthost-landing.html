@@ -1,0 +1,588 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>AgentHost — Deploy Your AI Agent in 60 Seconds</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Mono:wght@300;400;500&display=swap" rel="stylesheet"/>
+<style>
+  :root {
+    --bg: #080a0e;
+    --surface: #0e1117;
+    --border: #1a1f2e;
+    --accent: #00f5a0;
+    --accent2: #00d4ff;
+    --warn: #ff6b35;
+    --text: #e8eaf0;
+    --muted: #5a6070;
+    --card: #111520;
+  }
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'DM Mono', monospace;
+    overflow-x: hidden;
+    cursor: none;
+  }
+  .cursor {
+    width: 12px; height: 12px;
+    background: var(--accent);
+    border-radius: 50%;
+    position: fixed;
+    pointer-events: none;
+    z-index: 9999;
+    transition: transform 0.15s ease;
+    mix-blend-mode: difference;
+  }
+  .cursor-ring {
+    width: 36px; height: 36px;
+    border: 1px solid var(--accent);
+    border-radius: 50%;
+    position: fixed;
+    pointer-events: none;
+    z-index: 9998;
+    transition: left 0.08s ease, top 0.08s ease;
+    opacity: 0.4;
+  }
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(0,245,160,0.025) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(0,245,160,0.025) 1px, transparent 1px);
+    background-size: 60px 60px;
+    pointer-events: none;
+    z-index: 0;
+  }
+  nav {
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    z-index: 100;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 20px 48px;
+    border-bottom: 1px solid var(--border);
+    background: rgba(8,10,14,0.88);
+    backdrop-filter: blur(20px);
+  }
+  .logo {
+    font-family: 'Syne', sans-serif;
+    font-weight: 800;
+    font-size: 1.3rem;
+    letter-spacing: -0.02em;
+    color: var(--text);
+  }
+  .logo span { color: var(--accent); }
+  nav ul { display: flex; gap: 36px; list-style: none; }
+  nav ul a {
+    color: var(--muted);
+    text-decoration: none;
+    font-size: 0.78rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    transition: color 0.2s;
+  }
+  nav ul a:hover { color: var(--accent); }
+  .nav-cta {
+    background: var(--accent) !important;
+    color: #000 !important;
+    padding: 10px 22px;
+    border-radius: 4px;
+    font-weight: 500;
+  }
+  .nav-cta:hover { opacity: 0.85; }
+
+  .hero {
+    position: relative;
+    z-index: 2;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 140px 24px 80px;
+  }
+  .hero-glow {
+    position: absolute;
+    top: 20%; left: 50%;
+    transform: translateX(-50%);
+    width: 700px; height: 500px;
+    background: radial-gradient(ellipse, rgba(0,245,160,0.07) 0%, transparent 70%);
+    pointer-events: none;
+  }
+  .badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: rgba(0,245,160,0.08);
+    border: 1px solid rgba(0,245,160,0.2);
+    border-radius: 100px;
+    padding: 6px 18px;
+    font-size: 0.72rem;
+    color: var(--accent);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    margin-bottom: 36px;
+    animation: fadeUp 0.6s ease both;
+  }
+  .badge-dot {
+    width: 6px; height: 6px;
+    background: var(--accent);
+    border-radius: 50%;
+    animation: pulse 2s infinite;
+  }
+  @keyframes pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:.4;transform:scale(.8)} }
+  h1 {
+    font-family: 'Syne', sans-serif;
+    font-weight: 800;
+    font-size: clamp(2.8rem, 7vw, 6rem);
+    line-height: 1.0;
+    letter-spacing: -0.03em;
+    max-width: 900px;
+    animation: fadeUp 0.7s 0.1s ease both;
+  }
+  h1 .green { color: var(--accent); }
+  h1 .blue { color: var(--accent2); }
+  .hero-sub {
+    font-size: 1.05rem;
+    color: var(--muted);
+    max-width: 520px;
+    line-height: 1.7;
+    margin-top: 24px;
+    font-weight: 300;
+    animation: fadeUp 0.7s 0.2s ease both;
+  }
+  .hero-actions {
+    display: flex;
+    gap: 16px;
+    margin-top: 44px;
+    flex-wrap: wrap;
+    justify-content: center;
+    animation: fadeUp 0.7s 0.3s ease both;
+  }
+  .btn-primary {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    background: var(--accent);
+    color: #000;
+    padding: 16px 32px;
+    border-radius: 6px;
+    font-family: 'Syne', sans-serif;
+    font-weight: 700;
+    font-size: 0.95rem;
+    text-decoration: none;
+    transition: all 0.2s;
+    cursor: none;
+  }
+  .btn-primary:hover { background: #00e090; transform: translateY(-2px); box-shadow: 0 12px 40px rgba(0,245,160,.3); }
+  .btn-ghost {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    background: transparent;
+    color: var(--text);
+    padding: 16px 32px;
+    border-radius: 6px;
+    font-family: 'Syne', sans-serif;
+    font-weight: 600;
+    font-size: 0.95rem;
+    text-decoration: none;
+    border: 1px solid var(--border);
+    transition: all 0.2s;
+    cursor: none;
+  }
+  .btn-ghost:hover { border-color: var(--accent); color: var(--accent); }
+  .hero-stats {
+    display: flex;
+    gap: 56px;
+    margin-top: 80px;
+    animation: fadeUp 0.7s 0.4s ease both;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+  .stat-num {
+    font-family: 'Syne', sans-serif;
+    font-size: 2rem;
+    font-weight: 800;
+    color: var(--accent);
+  }
+  .stat-label {
+    font-size: 0.7rem;
+    color: var(--muted);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    margin-top: 4px;
+  }
+
+  .terminal-wrap {
+    position: relative;
+    z-index: 2;
+    padding: 0 24px 100px;
+    display: flex;
+    justify-content: center;
+  }
+  .terminal {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    width: 100%;
+    max-width: 720px;
+    overflow: hidden;
+    box-shadow: 0 40px 80px rgba(0,0,0,.5), 0 0 0 1px rgba(0,245,160,.04);
+  }
+  .t-header {
+    background: var(--surface);
+    padding: 14px 20px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    border-bottom: 1px solid var(--border);
+  }
+  .td { width: 12px; height: 12px; border-radius: 50%; }
+  .tr { background: #ff5f57; }
+  .ty { background: #febc2e; }
+  .tg { background: #28c840; }
+  .t-title { font-size: 0.72rem; color: var(--muted); margin-left: 8px; letter-spacing: .06em; }
+  .t-body { padding: 28px; font-size: 0.82rem; line-height: 2.1; }
+  .t-prompt { color: var(--accent); }
+  .t-out { color: var(--muted); }
+  .t-ok { color: var(--accent); }
+  .t-url { color: var(--accent2); }
+  .t-cursor { display:inline-block;width:8px;height:14px;background:var(--accent);animation:blink 1s infinite;vertical-align:middle;margin-left:2px; }
+  @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0} }
+
+  .divider { width:100%;height:1px;background:linear-gradient(90deg,transparent,var(--border),transparent);position:relative;z-index:2; }
+
+  section {
+    position: relative;
+    z-index: 2;
+    padding: 100px 48px;
+    max-width: 1160px;
+    margin: 0 auto;
+  }
+  .sec-label { font-size:.72rem;letter-spacing:.14em;text-transform:uppercase;color:var(--accent);margin-bottom:16px; }
+  .sec-title { font-family:'Syne',sans-serif;font-size:clamp(1.8rem,4vw,3rem);font-weight:800;letter-spacing:-.02em;line-height:1.1;max-width:600px; }
+  .sec-title span { color: var(--accent); }
+
+  .steps {
+    display: grid;
+    grid-template-columns: repeat(auto-fit,minmax(240px,1fr));
+    gap: 2px;
+    margin-top: 64px;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    overflow: hidden;
+  }
+  .step { background:var(--card);padding:40px 32px;border-right:1px solid var(--border);transition:background .2s; }
+  .step:last-child { border-right: none; }
+  .step:hover { background: #13182a; }
+  .step-num { font-family:'Syne',sans-serif;font-size:3rem;font-weight:800;color:rgba(0,245,160,.1);line-height:1;margin-bottom:20px; }
+  .step-title { font-family:'Syne',sans-serif;font-size:1.1rem;font-weight:700;margin-bottom:12px; }
+  .step-desc { font-size:.82rem;color:var(--muted);line-height:1.7; }
+
+  .features { display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:16px;margin-top:64px; }
+  .fcard {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 32px;
+    transition: all .2s;
+    position: relative;
+    overflow: hidden;
+  }
+  .fcard::before { content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,var(--accent),transparent);opacity:0;transition:opacity .2s; }
+  .fcard:hover { border-color:rgba(0,245,160,.2);transform:translateY(-4px); }
+  .fcard:hover::before { opacity:1; }
+  .ficon { font-size:1.6rem;margin-bottom:20px; }
+  .ftitle { font-family:'Syne',sans-serif;font-weight:700;font-size:1.05rem;margin-bottom:10px; }
+  .fdesc { font-size:.8rem;color:var(--muted);line-height:1.7; }
+
+  .pricing-grid { display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:16px;margin-top:64px; }
+  .pcard {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 40px 32px;
+    position: relative;
+    transition: all .2s;
+  }
+  .pcard.hot { border-color:var(--accent);background:linear-gradient(135deg,#0e1a14,#0a1410); }
+  .pcard.hot::after { content:'MOST POPULAR';position:absolute;top:-12px;left:50%;transform:translateX(-50%);background:var(--accent);color:#000;font-size:.65rem;font-weight:700;letter-spacing:.12em;padding:4px 14px;border-radius:100px; }
+  .pcard:hover { transform:translateY(-4px); }
+  .pname { font-size:.72rem;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin-bottom:12px; }
+  .pprice { font-family:'Syne',sans-serif;font-size:3rem;font-weight:800;color:var(--text);line-height:1; }
+  .pprice sup { font-size:1.2rem;vertical-align:top;margin-top:8px;display:inline-block; }
+  .pprice span { font-size:.85rem;color:var(--muted);font-weight:400; }
+  .pdesc { font-size:.8rem;color:var(--muted);margin-top:10px;margin-bottom:28px;line-height:1.6; }
+  .pfeatures { list-style:none;margin-bottom:32px; }
+  .pfeatures li { font-size:.82rem;color:var(--muted);padding:8px 0;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px; }
+  .pfeatures li::before { content:'✓';color:var(--accent);font-weight:700;flex-shrink:0; }
+  .pfeatures li.no { opacity:.4; }
+  .pfeatures li.no::before { content:'×';color:var(--muted); }
+  .pbtn { display:block;width:100%;padding:14px;border-radius:6px;text-align:center;font-family:'Syne',sans-serif;font-weight:700;font-size:.9rem;text-decoration:none;cursor:none;transition:all .2s;border:1px solid var(--border);color:var(--text);background:transparent; }
+  .pbtn:hover { border-color:var(--accent);color:var(--accent); }
+  .pbtn.hot { background:var(--accent);color:#000;border-color:var(--accent); }
+  .pbtn.hot:hover { background:#00e090;box-shadow:0 8px 24px rgba(0,245,160,.3); }
+
+  .tcards { display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:16px;margin-top:64px; }
+  .tcard { background:var(--card);border:1px solid var(--border);border-radius:10px;padding:28px; }
+  .ttext { font-size:.85rem;line-height:1.8;color:var(--text);margin-bottom:20px; }
+  .tauthor { display:flex;align-items:center;gap:12px; }
+  .tavatar { width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:'Syne',sans-serif;font-weight:800;font-size:.85rem;color:#000; }
+  .tname { font-family:'Syne',sans-serif;font-weight:700;font-size:.88rem; }
+  .trole { font-size:.72rem;color:var(--muted); }
+
+  .cta-sec {
+    position: relative;
+    z-index: 2;
+    text-align: center;
+    padding: 120px 24px;
+  }
+  .cta-sec::before { content:'';position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:800px;height:400px;background:radial-gradient(ellipse,rgba(0,212,255,.06) 0%,transparent 70%);pointer-events:none; }
+  .cta-sec h2 { font-family:'Syne',sans-serif;font-size:clamp(2rem,5vw,4rem);font-weight:800;letter-spacing:-.02em;max-width:700px;margin:0 auto 20px; }
+  .cta-sec h2 span { color: var(--accent2); }
+  .cta-sec p { font-size:.9rem;color:var(--muted);margin-bottom:40px; }
+  .cta-note { margin-top:16px;font-size:.72rem;color:var(--muted); }
+
+  footer {
+    position: relative;
+    z-index: 2;
+    border-top: 1px solid var(--border);
+    padding: 36px 48px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 16px;
+  }
+  .flinks { display:flex;gap:28px;list-style:none; }
+  .flinks a { color:var(--muted);text-decoration:none;font-size:.75rem;letter-spacing:.06em;transition:color .2s; }
+  .flinks a:hover { color:var(--accent); }
+  .fcopy { font-size:.72rem;color:var(--muted); }
+
+  @keyframes fadeUp { from{opacity:0;transform:translateY(24px)} to{opacity:1;transform:translateY(0)} }
+  .reveal { opacity:0;transform:translateY(32px);transition:opacity .6s ease,transform .6s ease; }
+  .reveal.vis { opacity:1;transform:translateY(0); }
+
+  @media(max-width:768px){
+    nav{padding:16px 20px;}
+    nav ul{display:none;}
+    section{padding:60px 20px;}
+    footer{flex-direction:column;text-align:center;}
+  }
+</style>
+</head>
+<body>
+
+<div class="cursor" id="cursor"></div>
+<div class="cursor-ring" id="ring"></div>
+
+<nav>
+  <div class="logo">Agent<span>Host</span></div>
+  <ul>
+    <li><a href="#how">How it works</a></li>
+    <li><a href="#features">Features</a></li>
+    <li><a href="#pricing">Pricing</a></li>
+    <li><a href="#pricing" class="nav-cta">Start Free →</a></li>
+  </ul>
+</nav>
+
+<div class="hero">
+  <div class="hero-glow"></div>
+  <div class="badge"><span class="badge-dot"></span>400+ agents deployed globally</div>
+  <h1>Deploy Your AI Agent<br/>in <span class="green">60 Seconds.</span><br/><span class="blue">No Code. No Servers.</span></h1>
+  <p class="hero-sub">AgentHost gives teams and agencies a one-click platform to launch, manage, and monetize AI agents — powered by the latest LLMs. Skip the infrastructure headaches.</p>
+  <div class="hero-actions">
+    <a href="#pricing" class="btn-primary">🚀 Deploy Your First Agent Free</a>
+    <a href="#how" class="btn-ghost">See how it works ↓</a>
+  </div>
+  <div class="hero-stats">
+    <div><div class="stat-num">60s</div><div class="stat-label">Avg deploy time</div></div>
+    <div><div class="stat-num">99.9%</div><div class="stat-label">Uptime SLA</div></div>
+    <div><div class="stat-num">$0</div><div class="stat-label">To start</div></div>
+    <div><div class="stat-num">400+</div><div class="stat-label">Active agents</div></div>
+  </div>
+</div>
+
+<div class="terminal-wrap">
+  <div class="terminal reveal">
+    <div class="t-header">
+      <span class="td tr"></span><span class="td ty"></span><span class="td tg"></span>
+      <span class="t-title">agenthost — deploy</span>
+    </div>
+    <div class="t-body">
+      <div><span class="t-prompt">$ </span>agenthost deploy --name "SupportBot" --model claude-3</div>
+      <div><span class="t-out">  → Initializing agent environment...</span></div>
+      <div><span class="t-out">  → Connecting to LLM provider...</span></div>
+      <div><span class="t-out">  → Configuring memory &amp; context...</span></div>
+      <div><span class="t-out">  → Setting up webhook endpoints...</span></div>
+      <div><span class="t-out">  → Running health checks...</span></div>
+      <div>&nbsp;</div>
+      <div><span class="t-ok">  ✓ Agent deployed successfully in 47s</span></div>
+      <div><span class="t-ok">  ✓ Live at: </span><span class="t-url">https://agenthost.io/a/supportbot-x9k2</span></div>
+      <div><span class="t-ok">  ✓ Embed snippet copied to clipboard</span></div>
+      <div>&nbsp;</div>
+      <div><span class="t-prompt">$ </span><span class="t-cursor"></span></div>
+    </div>
+  </div>
+</div>
+
+<div class="divider"></div>
+
+<section id="how">
+  <div class="sec-label reveal">Process</div>
+  <div class="sec-title reveal">From idea to live agent<br/><span>in 3 steps.</span></div>
+  <div class="steps reveal">
+    <div class="step">
+      <div class="step-num">01</div>
+      <div class="step-title">Configure Your Agent</div>
+      <div class="step-desc">Choose your AI model, set the personality, connect your knowledge base or documents. No code required — just a clean visual editor.</div>
+    </div>
+    <div class="step">
+      <div class="step-num">02</div>
+      <div class="step-title">One-Click Deploy</div>
+      <div class="step-desc">Hit deploy. AgentHost handles servers, scaling, uptime monitoring, and API rate limits. Your agent goes live with a shareable URL instantly.</div>
+    </div>
+    <div class="step">
+      <div class="step-num">03</div>
+      <div class="step-title">Embed &amp; Monetize</div>
+      <div class="step-desc">Drop a single script tag into any website. Track usage and revenue from your dashboard. Resell to clients under your own brand.</div>
+    </div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<section id="features">
+  <div class="sec-label reveal">Capabilities</div>
+  <div class="sec-title reveal">Everything you need.<br/><span>Nothing you don't.</span></div>
+  <div class="features">
+    <div class="fcard reveal"><div class="ficon">⚡</div><div class="ftitle">Multi-Model Support</div><div class="fdesc">Deploy agents powered by Claude, GPT-4, Gemini, or open-source models. Switch models without redeploying.</div></div>
+    <div class="fcard reveal"><div class="ficon">🔗</div><div class="ftitle">Embed Anywhere</div><div class="fdesc">One script tag. Works on Webflow, WordPress, Shopify, custom HTML — any website, any platform, any CMS.</div></div>
+    <div class="fcard reveal"><div class="ficon">🧠</div><div class="ftitle">Persistent Memory</div><div class="fdesc">Agents remember users across sessions. Upload PDFs, URLs, or FAQs as a knowledge base with automatic RAG.</div></div>
+    <div class="fcard reveal"><div class="ficon">🏷️</div><div class="ftitle">White-Label Ready</div><div class="fdesc">Remove AgentHost branding entirely. Use your own domain, logo, and colors. Resell to clients as your own product.</div></div>
+    <div class="fcard reveal"><div class="ficon">📊</div><div class="ftitle">Analytics Dashboard</div><div class="fdesc">Track conversations, response quality, drop-off points, and token usage. Export to CSV anytime.</div></div>
+    <div class="fcard reveal"><div class="ficon">🔒</div><div class="ftitle">Enterprise Security</div><div class="fdesc">SOC2-ready infrastructure. Data encryption at rest and in transit. GDPR compliance tools built in.</div></div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<section id="pricing">
+  <div class="sec-label reveal">Pricing</div>
+  <div class="sec-title reveal">Transparent pricing.<br/><span>Scale as you grow.</span></div>
+  <div class="pricing-grid">
+    <div class="pcard reveal">
+      <div class="pname">Starter</div>
+      <div class="pprice"><sup>$</sup>0<span>/mo</span></div>
+      <div class="pdesc">Perfect for testing your first agent and exploring the platform.</div>
+      <ul class="pfeatures">
+        <li>1 active agent</li>
+        <li>500 messages/month</li>
+        <li>Basic analytics</li>
+        <li>AgentHost subdomain</li>
+        <li class="no">White-label branding</li>
+        <li class="no">Custom domain</li>
+        <li class="no">Priority support</li>
+      </ul>
+      <a href="#" class="pbtn">Get Started Free</a>
+    </div>
+    <div class="pcard hot reveal">
+      <div class="pname">Pro</div>
+      <div class="pprice"><sup>$</sup>29<span>/mo</span></div>
+      <div class="pdesc">For freelancers and small agencies building client solutions.</div>
+      <ul class="pfeatures">
+        <li>10 active agents</li>
+        <li>10,000 messages/month</li>
+        <li>Full analytics + exports</li>
+        <li>Custom domain</li>
+        <li>White-label branding</li>
+        <li>Webhook integrations</li>
+        <li class="no">Priority support</li>
+      </ul>
+      <a href="#" class="pbtn hot">Start Pro — $29/mo</a>
+    </div>
+    <div class="pcard reveal">
+      <div class="pname">Agency</div>
+      <div class="pprice"><sup>$</sup>99<span>/mo</span></div>
+      <div class="pdesc">For agencies managing multiple clients and reselling AI solutions.</div>
+      <ul class="pfeatures">
+        <li>Unlimited agents</li>
+        <li>100,000 messages/month</li>
+        <li>Full analytics + exports</li>
+        <li>Custom domain + branding</li>
+        <li>Client management portal</li>
+        <li>Priority support (24h)</li>
+        <li>Full API access</li>
+      </ul>
+      <a href="#" class="pbtn">Start Agency Plan</a>
+    </div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<section>
+  <div class="sec-label reveal">Social proof</div>
+  <div class="sec-title reveal">Builders already<br/><span>shipping with us.</span></div>
+  <div class="tcards">
+    <div class="tcard reveal">
+      <div class="ttext">"I deployed a support bot for my SaaS client in under an hour. They pay me $200/month for it and I pay AgentHost $29. The margin is insane."</div>
+      <div class="tauthor"><div class="tavatar" style="background:var(--accent)">M</div><div><div class="tname">Marcus W.</div><div class="trole">Freelance developer, Germany</div></div></div>
+    </div>
+    <div class="tcard reveal">
+      <div class="ttext">"The white-label feature is everything. My agency now offers AI chatbots as a service. All running on AgentHost behind the scenes. Clients love it."</div>
+      <div class="tauthor"><div class="tavatar" style="background:var(--accent2)">S</div><div><div class="tname">Shreya K.</div><div class="trole">Agency owner, India</div></div></div>
+    </div>
+    <div class="tcard reveal">
+      <div class="ttext">"Went from idea to a working product listed on TrustMRR in 3 weeks. The infrastructure just works — I focused entirely on marketing and closing deals."</div>
+      <div class="tauthor"><div class="tavatar" style="background:var(--warn)">J</div><div><div class="tname">Jonas P.</div><div class="trole">Indie founder, Sweden</div></div></div>
+    </div>
+  </div>
+</section>
+
+<div class="cta-sec">
+  <h2>Your agent is<br/><span>waiting to be deployed.</span></h2>
+  <p>No credit card required. Live in 60 seconds.</p>
+  <a href="#pricing" class="btn-primary">🚀 Deploy Free Now</a>
+  <div class="cta-note">Free plan forever · Upgrade anytime · Cancel anytime</div>
+</div>
+
+<footer>
+  <div class="logo">Agent<span>Host</span></div>
+  <ul class="flinks">
+    <li><a href="#">Docs</a></li>
+    <li><a href="#">Blog</a></li>
+    <li><a href="#">Privacy</a></li>
+    <li><a href="#">Terms</a></li>
+    <li><a href="#">Contact</a></li>
+  </ul>
+  <div class="fcopy">© 2026 AgentHost. Built for global builders.</div>
+</footer>
+
+<script>
+  const cursor = document.getElementById('cursor');
+  const ring = document.getElementById('ring');
+  document.addEventListener('mousemove', e => {
+    cursor.style.left = e.clientX - 6 + 'px';
+    cursor.style.top = e.clientY - 6 + 'px';
+    ring.style.left = e.clientX - 18 + 'px';
+    ring.style.top = e.clientY - 18 + 'px';
+  });
+  document.querySelectorAll('a,button').forEach(el => {
+    el.addEventListener('mouseenter', () => cursor.style.transform = 'scale(2.5)');
+    el.addEventListener('mouseleave', () => cursor.style.transform = 'scale(1)');
+  });
+  const obs = new IntersectionObserver(entries => {
+    entries.forEach(e => { if(e.isIntersecting) e.target.classList.add('vis'); });
+  }, { threshold: 0.08 });
+  document.querySelectorAll('.reveal').forEach(el => obs.observe(el));
+</script>
+</body>
+</html>
