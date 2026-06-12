@@ -1,0 +1,563 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>AgentHost AI — Sign Up / Login</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Mono:wght@300;400;500&display=swap" rel="stylesheet"/>
+<style>
+:root {
+  --bg: #05050a;
+  --surface: #0d1018;
+  --card: #111520;
+  --border: #181e2c;
+  --border2: #222840;
+  --accent: #00f5a0;
+  --accent2: #00d4ff;
+  --red: #ff4f4f;
+  --text: #e8eaf0;
+  --muted: #4a5268;
+  --muted2: #6a7490;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+html,body{height:100%;}
+body{
+  background:var(--bg);color:var(--text);
+  font-family:'DM Mono',monospace;
+  display:flex;align-items:center;justify-content:center;
+  min-height:100vh;overflow:hidden;position:relative;
+}
+
+/* GRID BG */
+body::before{
+  content:'';position:fixed;inset:0;
+  background-image:linear-gradient(rgba(0,245,160,.025) 1px,transparent 1px),linear-gradient(90deg,rgba(0,245,160,.025) 1px,transparent 1px);
+  background-size:60px 60px;pointer-events:none;z-index:0;
+}
+
+/* GLOW */
+.glow{
+  position:fixed;top:30%;left:50%;transform:translateX(-50%);
+  width:600px;height:400px;
+  background:radial-gradient(ellipse,rgba(0,245,160,.07) 0%,transparent 70%);
+  pointer-events:none;z-index:0;
+}
+
+/* BACK LINK */
+.back-link{
+  position:fixed;top:24px;left:24px;z-index:10;
+  display:flex;align-items:center;gap:8px;
+  color:var(--muted2);text-decoration:none;
+  font-size:.78rem;letter-spacing:.06em;
+  transition:color .2s;
+}
+.back-link:hover{color:var(--accent);}
+
+/* LOGO */
+.logo-wrap{
+  position:fixed;top:24px;left:50%;transform:translateX(-50%);z-index:10;
+  font-family:'Syne',sans-serif;font-weight:800;font-size:1.2rem;letter-spacing:-.02em;
+  text-decoration:none;color:var(--text);
+}
+.logo-wrap span{color:var(--accent);}
+
+/* AUTH CARD */
+.auth-card{
+  position:relative;z-index:1;
+  background:var(--card);
+  border:1px solid var(--border2);
+  border-radius:16px;
+  padding:40px 40px 36px;
+  width:100%;max-width:420px;
+  margin:20px;
+  animation:fadeUp .5s ease both;
+}
+@keyframes fadeUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
+
+.auth-title{
+  font-family:'Syne',sans-serif;
+  font-weight:800;font-size:1.6rem;
+  letter-spacing:-.02em;margin-bottom:6px;
+}
+.auth-sub{font-size:.78rem;color:var(--muted2);margin-bottom:32px;line-height:1.5;}
+.auth-sub span{color:var(--accent);}
+
+/* TABS */
+.tabs{
+  display:flex;background:var(--surface);
+  border-radius:8px;padding:4px;margin-bottom:28px;
+  border:1px solid var(--border);
+}
+.tab-btn{
+  flex:1;padding:9px;border-radius:6px;
+  font-family:'Syne',sans-serif;font-weight:600;font-size:.82rem;
+  border:none;cursor:pointer;transition:all .2s;
+  background:transparent;color:var(--muted2);
+}
+.tab-btn.active{background:var(--accent);color:#000;}
+
+/* FORM */
+.field{margin-bottom:18px;}
+.field label{
+  display:block;font-size:.68rem;
+  letter-spacing:.1em;text-transform:uppercase;
+  color:var(--muted2);margin-bottom:8px;
+}
+.field input{
+  width:100%;background:var(--surface);
+  border:1px solid var(--border2);border-radius:8px;
+  padding:13px 16px;color:var(--text);
+  font-family:'DM Mono',monospace;font-size:.88rem;
+  outline:none;transition:border-color .2s;
+}
+.field input:focus{border-color:var(--accent);}
+.field input::placeholder{color:var(--muted);}
+
+/* PASSWORD WRAPPER */
+.pw-wrap{position:relative;}
+.pw-toggle{
+  position:absolute;right:14px;top:50%;transform:translateY(-50%);
+  background:none;border:none;color:var(--muted2);cursor:pointer;
+  font-size:.75rem;letter-spacing:.04em;transition:color .2s;
+}
+.pw-toggle:hover{color:var(--accent);}
+
+/* SUBMIT BTN */
+.submit-btn{
+  width:100%;padding:14px;border-radius:8px;
+  background:var(--accent);color:#000;
+  font-family:'Syne',sans-serif;font-weight:700;font-size:.95rem;
+  border:none;cursor:pointer;transition:all .2s;margin-top:4px;
+}
+.submit-btn:hover{background:#00e090;transform:translateY(-2px);box-shadow:0 8px 24px rgba(0,245,160,.3);}
+.submit-btn:disabled{opacity:.5;cursor:not-allowed;transform:none;}
+
+/* DIVIDER */
+.or-divider{
+  display:flex;align-items:center;gap:12px;
+  margin:20px 0;font-size:.72rem;color:var(--muted);
+}
+.or-divider::before,.or-divider::after{
+  content:'';flex:1;height:1px;background:var(--border2);
+}
+
+/* GOOGLE BTN */
+.google-btn{
+  width:100%;padding:13px;border-radius:8px;
+  background:transparent;color:var(--text);
+  border:1px solid var(--border2);
+  font-family:'Syne',sans-serif;font-weight:600;font-size:.88rem;
+  cursor:pointer;transition:all .2s;
+  display:flex;align-items:center;justify-content:center;gap:10px;
+}
+.google-btn:hover{border-color:rgba(255,255,255,.2);background:rgba(255,255,255,.04);}
+.google-icon{width:18px;height:18px;}
+
+/* PLAN SELECTOR */
+.plan-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:18px;}
+.plan-opt{
+  padding:10px 6px;border-radius:8px;
+  border:1px solid var(--border2);
+  cursor:pointer;transition:all .2s;
+  text-align:center;background:var(--surface);
+}
+.plan-opt:hover{border-color:var(--border2);}
+.plan-opt.selected{border-color:var(--accent);background:rgba(0,245,160,.06);}
+.plan-opt input[type=radio]{display:none;}
+.plan-name{font-family:'Syne',sans-serif;font-weight:700;font-size:.75rem;display:block;margin-bottom:2px;}
+.plan-price{font-size:.65rem;color:var(--muted2);}
+.plan-opt.selected .plan-name{color:var(--accent);}
+
+/* ERROR / SUCCESS */
+.msg{
+  padding:12px 16px;border-radius:8px;
+  font-size:.78rem;margin-bottom:18px;
+  display:none;align-items:center;gap:8px;
+}
+.msg.error{background:rgba(255,79,79,.1);border:1px solid rgba(255,79,79,.2);color:#ff7070;display:flex;}
+.msg.success{background:rgba(0,245,160,.08);border:1px solid rgba(0,245,160,.2);color:var(--accent);display:flex;}
+
+/* FOOTER NOTE */
+.auth-footer{
+  text-align:center;margin-top:20px;
+  font-size:.72rem;color:var(--muted2);
+}
+.auth-footer a{color:var(--accent);text-decoration:none;}
+
+/* LOADING SPINNER */
+.spinner{
+  display:inline-block;width:16px;height:16px;
+  border:2px solid rgba(0,0,0,.3);
+  border-top-color:#000;border-radius:50%;
+  animation:spin .6s linear infinite;
+  vertical-align:middle;margin-right:6px;
+}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* SUCCESS SCREEN */
+.success-screen{
+  text-align:center;display:none;
+}
+.success-icon{font-size:3rem;margin-bottom:16px;}
+.success-title{font-family:'Syne',sans-serif;font-weight:800;font-size:1.4rem;margin-bottom:8px;}
+.success-sub{font-size:.82rem;color:var(--muted2);line-height:1.7;margin-bottom:28px;}
+
+/* FORGOT PASSWORD */
+.forgot-link{
+  float:right;font-size:.7rem;color:var(--muted2);
+  text-decoration:none;transition:color .2s;
+}
+.forgot-link:hover{color:var(--accent);}
+
+@media(max-width:480px){
+  .auth-card{padding:28px 24px;margin:16px;}
+  .plan-grid{grid-template-columns:1fr 1fr 1fr;}
+}
+</style>
+</head>
+<body>
+
+<div class="glow"></div>
+
+<a href="/" class="back-link">← Back to home</a>
+
+<a href="/" class="logo-wrap">Agent<span>Host</span></a>
+
+<div class="auth-card">
+
+  <!-- TABS -->
+  <div class="tabs">
+    <button class="tab-btn active" onclick="switchTab('signup',this)">Create Account</button>
+    <button class="tab-btn" onclick="switchTab('login',this)">Sign In</button>
+  </div>
+
+  <!-- ERROR / SUCCESS MSG -->
+  <div class="msg error" id="errorMsg">
+    <span>⚠️</span><span id="errorText">Something went wrong.</span>
+  </div>
+  <div class="msg success" id="successMsg">
+    <span>✅</span><span id="successText">Success!</span>
+  </div>
+
+  <!-- SIGNUP FORM -->
+  <div id="signupForm">
+    <div class="auth-title">Start your free trial</div>
+    <div class="auth-sub">14 days free · No credit card · Cancel anytime</div>
+
+    <div class="field">
+      <label>Full Name</label>
+      <input type="text" id="signupName" placeholder="Your name" autocomplete="name"/>
+    </div>
+
+    <div class="field">
+      <label>Email Address</label>
+      <input type="email" id="signupEmail" placeholder="you@company.com" autocomplete="email"/>
+    </div>
+
+    <div class="field">
+      <label>Password</label>
+      <div class="pw-wrap">
+        <input type="password" id="signupPassword" placeholder="Min 8 characters"/>
+        <button class="pw-toggle" onclick="togglePw('signupPassword',this)" type="button">Show</button>
+      </div>
+    </div>
+
+    <div class="field">
+      <label>Choose your plan</label>
+      <div class="plan-grid">
+        <label class="plan-opt selected" onclick="selectPlan(this,'free')">
+          <input type="radio" name="plan" value="free" checked/>
+          <span class="plan-name">Free Trial</span>
+          <span class="plan-price">14 days</span>
+        </label>
+        <label class="plan-opt" onclick="selectPlan(this,'pro')">
+          <input type="radio" name="plan" value="pro"/>
+          <span class="plan-name">Pro</span>
+          <span class="plan-price">$49/mo</span>
+        </label>
+        <label class="plan-opt" onclick="selectPlan(this,'agency')">
+          <input type="radio" name="plan" value="agency"/>
+          <span class="plan-name">Agency</span>
+          <span class="plan-price">$99/mo</span>
+        </label>
+      </div>
+    </div>
+
+    <button class="submit-btn" onclick="handleSignup()" id="signupBtn">
+      Create Account →
+    </button>
+
+    <div class="or-divider">or</div>
+
+    <button class="google-btn" onclick="handleGoogle()">
+      <svg class="google-icon" viewBox="0 0 24 24">
+        <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+        <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+        <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
+        <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+      </svg>
+      Continue with Google
+    </button>
+
+    <div class="auth-footer">
+      Already have an account? <a href="#" onclick="switchTab('login',document.querySelectorAll('.tab-btn')[1])">Sign in →</a>
+    </div>
+  </div>
+
+  <!-- LOGIN FORM -->
+  <div id="loginForm" style="display:none">
+    <div class="auth-title">Welcome back</div>
+    <div class="auth-sub">Sign in to your <span>AgentHost</span> account</div>
+
+    <div class="field">
+      <label>Email Address</label>
+      <input type="email" id="loginEmail" placeholder="you@company.com" autocomplete="email"/>
+    </div>
+
+    <div class="field">
+      <label>
+        Password
+        <a href="#" class="forgot-link" onclick="handleForgot()">Forgot password?</a>
+      </label>
+      <div class="pw-wrap">
+        <input type="password" id="loginPassword" placeholder="Your password"/>
+        <button class="pw-toggle" onclick="togglePw('loginPassword',this)" type="button">Show</button>
+      </div>
+    </div>
+
+    <button class="submit-btn" onclick="handleLogin()" id="loginBtn">
+      Sign In →
+    </button>
+
+    <div class="or-divider">or</div>
+
+    <button class="google-btn" onclick="handleGoogle()">
+      <svg class="google-icon" viewBox="0 0 24 24">
+        <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+        <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+        <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
+        <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+      </svg>
+      Continue with Google
+    </button>
+
+    <div class="auth-footer">
+      Don't have an account? <a href="#" onclick="switchTab('signup',document.querySelectorAll('.tab-btn')[0])">Start free trial →</a>
+    </div>
+  </div>
+
+  <!-- SUCCESS SCREEN -->
+  <div class="success-screen" id="successScreen">
+    <div class="success-icon">🎉</div>
+    <div class="success-title">You're in!</div>
+    <div class="success-sub">Your account is ready. Taking you to the dashboard now...</div>
+    <button class="submit-btn" onclick="window.location='/agenthost-dashboard-1.html'">
+      Open Dashboard →
+    </button>
+  </div>
+
+</div>
+
+<script>
+// ─── SUPABASE CONFIG ─────────────────────────────────────────────────────────
+// Replace these with your actual Supabase values
+const SUPABASE_URL = 'https://cdhkzvpwmkcbxrvqujhb.supabase.co';
+const SUPABASE_ANON_KEY = 'YOUR_SUPABASE_ANON_KEY'; // ← replace this
+
+// ─── HELPERS ─────────────────────────────────────────────────────────────────
+function showError(msg) {
+  document.getElementById('errorText').textContent = msg;
+  document.getElementById('errorMsg').style.display = 'flex';
+  document.getElementById('successMsg').style.display = 'none';
+}
+function showSuccess(msg) {
+  document.getElementById('successText').textContent = msg;
+  document.getElementById('successMsg').style.display = 'flex';
+  document.getElementById('errorMsg').style.display = 'none';
+}
+function hideMessages() {
+  document.getElementById('errorMsg').style.display = 'none';
+  document.getElementById('successMsg').style.display = 'none';
+}
+function setLoading(btnId, loading, text) {
+  const btn = document.getElementById(btnId);
+  btn.disabled = loading;
+  btn.innerHTML = loading ? `<span class="spinner"></span>Please wait...` : text;
+}
+
+// ─── TAB SWITCH ──────────────────────────────────────────────────────────────
+function switchTab(tab, el) {
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  el.classList.add('active');
+  document.getElementById('signupForm').style.display = tab === 'signup' ? 'block' : 'none';
+  document.getElementById('loginForm').style.display = tab === 'login' ? 'block' : 'none';
+  document.getElementById('successScreen').style.display = 'none';
+  hideMessages();
+}
+
+// ─── PLAN SELECT ─────────────────────────────────────────────────────────────
+let selectedPlan = 'free';
+function selectPlan(el, plan) {
+  document.querySelectorAll('.plan-opt').forEach(o => o.classList.remove('selected'));
+  el.classList.add('selected');
+  selectedPlan = plan;
+}
+
+// ─── PASSWORD TOGGLE ─────────────────────────────────────────────────────────
+function togglePw(inputId, btn) {
+  const input = document.getElementById(inputId);
+  const isHidden = input.type === 'password';
+  input.type = isHidden ? 'text' : 'password';
+  btn.textContent = isHidden ? 'Hide' : 'Show';
+}
+
+// ─── SIGNUP ──────────────────────────────────────────────────────────────────
+async function handleSignup() {
+  hideMessages();
+  const name = document.getElementById('signupName').value.trim();
+  const email = document.getElementById('signupEmail').value.trim();
+  const password = document.getElementById('signupPassword').value;
+
+  if (!name) return showError('Please enter your name.');
+  if (!email || !email.includes('@')) return showError('Please enter a valid email.');
+  if (password.length < 8) return showError('Password must be at least 8 characters.');
+
+  setLoading('signupBtn', true, 'Create Account →');
+
+  try {
+    // Sign up with Supabase
+    const res = await fetch(`${SUPABASE_URL}/auth/v1/signup`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'apikey': SUPABASE_ANON_KEY,
+      },
+      body: JSON.stringify({
+        email,
+        password,
+        data: { full_name: name, plan: selectedPlan }
+      })
+    });
+
+    const data = await res.json();
+
+    if (data.error) {
+      showError(data.error.message || 'Signup failed. Please try again.');
+      setLoading('signupBtn', false, 'Create Account →');
+      return;
+    }
+
+    // Save token
+    if (data.access_token) {
+      localStorage.setItem('ah_token', data.access_token);
+      localStorage.setItem('ah_user', JSON.stringify({ email, name, plan: selectedPlan }));
+    }
+
+    // If paid plan → redirect to payment
+    if (selectedPlan === 'pro') {
+      window.location = 'https://rzp.io/l/agenthost-pro';
+      return;
+    }
+    if (selectedPlan === 'agency') {
+      window.location = 'https://rzp.io/l/agenthost-agency';
+      return;
+    }
+
+    // Free trial → show success
+    setLoading('signupBtn', false, 'Create Account →');
+    document.getElementById('signupForm').style.display = 'none';
+    document.getElementById('successScreen').style.display = 'block';
+
+    setTimeout(() => {
+      window.location = '/agenthost-dashboard-1.html';
+    }, 2000);
+
+  } catch(e) {
+    showError('Connection error. Please try again.');
+    setLoading('signupBtn', false, 'Create Account →');
+  }
+}
+
+// ─── LOGIN ───────────────────────────────────────────────────────────────────
+async function handleLogin() {
+  hideMessages();
+  const email = document.getElementById('loginEmail').value.trim();
+  const password = document.getElementById('loginPassword').value;
+
+  if (!email || !email.includes('@')) return showError('Please enter a valid email.');
+  if (!password) return showError('Please enter your password.');
+
+  setLoading('loginBtn', true, 'Sign In →');
+
+  try {
+    const res = await fetch(`${SUPABASE_URL}/auth/v1/token?grant_type=password`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'apikey': SUPABASE_ANON_KEY,
+      },
+      body: JSON.stringify({ email, password })
+    });
+
+    const data = await res.json();
+
+    if (data.error || !data.access_token) {
+      showError(data.error_description || 'Invalid email or password.');
+      setLoading('loginBtn', false, 'Sign In →');
+      return;
+    }
+
+    localStorage.setItem('ah_token', data.access_token);
+    localStorage.setItem('ah_user', JSON.stringify({ email }));
+
+    setLoading('loginBtn', false, 'Sign In →');
+    document.getElementById('loginForm').style.display = 'none';
+    document.getElementById('successScreen').style.display = 'block';
+
+    setTimeout(() => {
+      window.location = '/agenthost-dashboard-1.html';
+    }, 1500);
+
+  } catch(e) {
+    showError('Connection error. Please try again.');
+    setLoading('loginBtn', false, 'Sign In →');
+  }
+}
+
+// ─── GOOGLE AUTH ─────────────────────────────────────────────────────────────
+function handleGoogle() {
+  window.location = `${SUPABASE_URL}/auth/v1/authorize?provider=google&redirect_to=${encodeURIComponent(window.location.origin + '/agenthost-dashboard-1.html')}&apikey=${SUPABASE_ANON_KEY}`;
+}
+
+// ─── FORGOT PASSWORD ─────────────────────────────────────────────────────────
+async function handleForgot() {
+  const email = document.getElementById('loginEmail').value.trim();
+  if (!email) return showError('Enter your email first, then click Forgot password.');
+
+  const res = await fetch(`${SUPABASE_URL}/auth/v1/recover`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_ANON_KEY },
+    body: JSON.stringify({ email })
+  });
+
+  showSuccess(`Password reset email sent to ${email}`);
+}
+
+// ─── ENTER KEY SUPPORT ───────────────────────────────────────────────────────
+document.addEventListener('keydown', e => {
+  if (e.key === 'Enter') {
+    const signupVisible = document.getElementById('signupForm').style.display !== 'none';
+    if (signupVisible) handleSignup();
+    else handleLogin();
+  }
+});
+
+// ─── CHECK IF ALREADY LOGGED IN ──────────────────────────────────────────────
+const token = localStorage.getItem('ah_token');
+if (token) {
+  window.location = '/agenthost-dashboard-1.html';
+}
+</script>
+</body>
+</html>
+
