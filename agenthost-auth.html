@@ -552,6 +552,11 @@ document.addEventListener('keydown', e => {
   }
 });
 
+// ─── AUTO SWITCH TO LOGIN IF #login IN URL ───────────────────────────────────
+if (window.location.hash === '#login') {
+  switchTab('login', document.querySelectorAll('.tab-btn')[1]);
+}
+
 // ─── CHECK IF ALREADY LOGGED IN ──────────────────────────────────────────────
 const token = localStorage.getItem('ah_token');
 if (token) {
