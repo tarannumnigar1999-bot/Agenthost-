@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 <title>AgentHost Dashboard</title>
 <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Mono:wght@300;400;500&display=swap" rel="stylesheet"/>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
 :root {
   --bg: #07090d;
@@ -23,9 +24,8 @@
 }
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
 html,body{height:100%;overflow:hidden;}
-body{background:var(--bg);color:var(--text);font-family:'DM Mono',monospace;display:flex;}
+body{background:var(--bg);color:var(--text);font-family:'DM Mono',monospace;display:flex;visibility:hidden;}
 
-/* SIDEBAR */
 .sidebar {
   width: var(--sidebar-w);
   min-width: var(--sidebar-w);
@@ -36,115 +36,38 @@ body{background:var(--bg);color:var(--text);font-family:'DM Mono',monospace;disp
   flex-direction: column;
   z-index: 10;
 }
-.sb-logo {
-  padding: 24px 20px 20px;
-  border-bottom: 1px solid var(--border);
-  font-family: 'Syne', sans-serif;
-  font-weight: 800;
-  font-size: 1.2rem;
-  letter-spacing: -0.02em;
-}
+.sb-logo { padding: 24px 20px 20px; border-bottom: 1px solid var(--border); font-family: 'Syne', sans-serif; font-weight: 800; font-size: 1.2rem; letter-spacing: -0.02em; }
 .sb-logo span { color: var(--accent); }
 .sb-logo small { display:block;font-size:.6rem;color:var(--muted);font-family:'DM Mono',monospace;font-weight:400;margin-top:2px;letter-spacing:.08em; }
-
 .sb-section { padding: 20px 12px 8px; }
 .sb-label { font-size:.62rem;color:var(--muted);letter-spacing:.14em;text-transform:uppercase;padding:0 8px;margin-bottom:6px; }
-.sb-item {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 10px 12px;
-  border-radius: 8px;
-  font-size: .8rem;
-  color: var(--muted2);
-  cursor: pointer;
-  transition: all .18s;
-  border: 1px solid transparent;
-}
+.sb-item { display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-radius: 8px; font-size: .8rem; color: var(--muted2); cursor: pointer; transition: all .18s; border: 1px solid transparent; }
 .sb-item:hover { background: var(--card); color: var(--text); }
 .sb-item.active { background: rgba(0,245,160,.07); color: var(--accent); border-color: rgba(0,245,160,.12); }
 .sb-icon { font-size: 1rem; width: 20px; text-align: center; }
 .sb-badge { margin-left:auto;background:var(--accent);color:#000;font-size:.6rem;font-weight:700;padding:2px 7px;border-radius:100px; }
-
-.sb-bottom {
-  margin-top: auto;
-  padding: 16px;
-  border-top: 1px solid var(--border);
-}
-.user-pill {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 10px 12px;
-  background: var(--card);
-  border-radius: 8px;
-  border: 1px solid var(--border);
-}
-.user-av {
-  width: 28px;height:28px;
-  background: linear-gradient(135deg,var(--accent),var(--accent2));
-  border-radius: 50%;
-  display:flex;align-items:center;justify-content:center;
-  font-family:'Syne',sans-serif;font-weight:800;font-size:.75rem;color:#000;
-  flex-shrink:0;
-}
+.sb-bottom { margin-top: auto; padding: 16px; border-top: 1px solid var(--border); }
+.user-pill { display: flex; align-items: center; gap: 10px; padding: 10px 12px; background: var(--card); border-radius: 8px; border: 1px solid var(--border); }
+.user-av { width: 28px;height:28px; background: linear-gradient(135deg,var(--accent),var(--accent2)); border-radius: 50%; display:flex;align-items:center;justify-content:center; font-family:'Syne',sans-serif;font-weight:800;font-size:.75rem;color:#000; flex-shrink:0; }
 .user-info { flex:1;min-width:0; }
 .user-name { font-size:.78rem;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis; }
 .user-plan { font-size:.62rem;color:var(--accent);letter-spacing:.06em; }
+.signout-btn { background:none;border:none;color:var(--muted);font-size:.65rem;cursor:pointer;margin-top:8px;text-decoration:underline; }
 
-/* MAIN */
-.main {
-  flex: 1;
-  height: 100vh;
-  overflow: hidden;
-  display: flex;
-  flex-direction: column;
-}
-.topbar {
-  height: 56px;
-  border-bottom: 1px solid var(--border);
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 0 28px;
-  background: var(--surface);
-  flex-shrink: 0;
-}
+.main { flex: 1; height: 100vh; overflow: hidden; display: flex; flex-direction: column; }
+.topbar { height: 56px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; padding: 0 28px; background: var(--surface); flex-shrink: 0; }
 .page-title { font-family:'Syne',sans-serif;font-weight:700;font-size:1rem; }
 .topbar-right { display:flex;align-items:center;gap:12px; }
-.tb-btn {
-  display:flex;align-items:center;gap:8px;
-  background:var(--accent);color:#000;
-  padding:8px 18px;border-radius:6px;
-  font-family:'Syne',sans-serif;font-weight:700;font-size:.8rem;
-  border:none;cursor:pointer;transition:all .2s;
-}
+.tb-btn { display:flex;align-items:center;gap:8px; background:var(--accent);color:#000; padding:8px 18px;border-radius:6px; font-family:'Syne',sans-serif;font-weight:700;font-size:.8rem; border:none;cursor:pointer;transition:all .2s; }
 .tb-btn:hover { background:#00e090;transform:translateY(-1px); }
-
-.content {
-  flex: 1;
-  overflow-y: auto;
-  padding: 28px;
-}
+.content { flex: 1; overflow-y: auto; padding: 28px; }
 .content::-webkit-scrollbar{width:4px;}
 .content::-webkit-scrollbar-track{background:transparent;}
 .content::-webkit-scrollbar-thumb{background:var(--border2);border-radius:2px;}
-
-/* VIEWS */
 .view { display:none; }
 .view.active { display:block; }
-
-/* STATS ROW */
 .stats-row { display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:24px; }
-.stat-card {
-  background:var(--card);
-  border:1px solid var(--border);
-  border-radius:10px;
-  padding:20px 22px;
-  position:relative;
-  overflow:hidden;
-  transition:border-color .2s;
-}
+.stat-card { background:var(--card); border:1px solid var(--border); border-radius:10px; padding:20px 22px; position:relative; overflow:hidden; transition:border-color .2s; }
 .stat-card:hover { border-color:var(--border2); }
 .stat-card::after { content:'';position:absolute;top:0;left:0;right:0;height:2px;background:var(--line-color,var(--accent));opacity:.6; }
 .sc-label { font-size:.65rem;letter-spacing:.1em;text-transform:uppercase;color:var(--muted2);margin-bottom:10px; }
@@ -152,32 +75,15 @@ body{background:var(--bg);color:var(--text);font-family:'DM Mono',monospace;disp
 .sc-delta { font-size:.7rem;margin-top:6px; }
 .sc-delta.up { color:var(--accent); }
 .sc-delta.dn { color:var(--red); }
-
-/* AGENTS GRID */
+.sc-delta.muted { color: var(--muted); }
 .agents-grid { display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:14px; }
-.agent-card {
-  background:var(--card);
-  border:1px solid var(--border);
-  border-radius:12px;
-  padding:22px;
-  cursor:pointer;
-  transition:all .2s;
-  position:relative;
-}
+.agent-card { background:var(--card); border:1px solid var(--border); border-radius:12px; padding:22px; cursor:pointer; transition:all .2s; position:relative; }
 .agent-card:hover { border-color:rgba(0,245,160,.25);transform:translateY(-3px);box-shadow:0 12px 32px rgba(0,0,0,.4); }
 .ac-head { display:flex;align-items:center;gap:12px;margin-bottom:16px; }
-.ac-icon {
-  width:42px;height:42px;border-radius:10px;
-  display:flex;align-items:center;justify-content:center;
-  font-size:1.3rem;flex-shrink:0;
-}
+.ac-icon { width:42px;height:42px;border-radius:10px; display:flex;align-items:center;justify-content:center; font-size:1.3rem;flex-shrink:0; }
 .ac-name { font-family:'Syne',sans-serif;font-weight:700;font-size:1rem; }
 .ac-model { font-size:.68rem;color:var(--muted2);margin-top:2px; }
-.ac-status {
-  margin-left:auto;
-  display:flex;align-items:center;gap:5px;
-  font-size:.65rem;letter-spacing:.06em;text-transform:uppercase;
-}
+.ac-status { margin-left:auto; display:flex;align-items:center;gap:5px; font-size:.65rem;letter-spacing:.06em;text-transform:uppercase; }
 .status-dot { width:6px;height:6px;border-radius:50%; }
 .dot-live { background:var(--accent);box-shadow:0 0 6px var(--accent); animation: statusPulse 2s infinite; }
 .dot-off { background:var(--muted); }
@@ -191,70 +97,28 @@ body{background:var(--bg);color:var(--text);font-family:'DM Mono',monospace;disp
 .ac-btn:hover { border-color:var(--accent);color:var(--accent); }
 .ac-btn.primary { background:var(--accent);color:#000;border-color:var(--accent); }
 .ac-btn.primary:hover { background:#00e090; }
-.add-agent-card {
-  background:transparent;
-  border:1px dashed var(--border2);
-  border-radius:12px;
-  padding:22px;
-  cursor:pointer;
-  transition:all .2s;
-  display:flex;flex-direction:column;align-items:center;justify-content:center;
-  min-height:200px;gap:12px;
-  color:var(--muted);
-}
+.add-agent-card { background:transparent; border:1px dashed var(--border2); border-radius:12px; padding:22px; cursor:pointer; transition:all .2s; display:flex;flex-direction:column;align-items:center;justify-content:center; min-height:200px;gap:12px; color:var(--muted); }
 .add-agent-card:hover { border-color:var(--accent);color:var(--accent);background:rgba(0,245,160,.03); }
 .add-icon { font-size:2rem; }
 .add-label { font-family:'Syne',sans-serif;font-weight:700;font-size:.9rem; }
 .add-sub { font-size:.72rem;color:var(--muted); }
-
-/* MODAL */
-.modal-overlay {
-  position:fixed;inset:0;background:rgba(0,0,0,.75);backdrop-filter:blur(4px);
-  z-index:1000;display:none;align-items:center;justify-content:center;
-}
+.modal-overlay { position:fixed;inset:0;background:rgba(0,0,0,.75);backdrop-filter:blur(4px); z-index:1000;display:none;align-items:center;justify-content:center; }
 .modal-overlay.open { display:flex; }
-.modal {
-  background:var(--surface);
-  border:1px solid var(--border2);
-  border-radius:16px;
-  width:100%;max-width:560px;
-  max-height:90vh;overflow-y:auto;
-  animation:modalIn .2s ease;
-}
+.modal { background:var(--surface); border:1px solid var(--border2); border-radius:16px; width:100%;max-width:560px; max-height:90vh;overflow-y:auto; animation:modalIn .2s ease; }
 .modal::-webkit-scrollbar{width:3px;}
 .modal::-webkit-scrollbar-thumb{background:var(--border2);}
 @keyframes modalIn { from{opacity:0;transform:scale(.96)translateY(8px)} to{opacity:1;transform:scale(1)translateY(0)} }
-.modal-head {
-  padding:24px 28px 20px;
-  border-bottom:1px solid var(--border);
-  display:flex;align-items:center;justify-content:space-between;
-}
+.modal-head { padding:24px 28px 20px; border-bottom:1px solid var(--border); display:flex;align-items:center;justify-content:space-between; }
 .modal-title { font-family:'Syne',sans-serif;font-weight:800;font-size:1.1rem; }
 .modal-close { background:none;border:none;color:var(--muted2);font-size:1.3rem;cursor:pointer;transition:color .2s; }
 .modal-close:hover { color:var(--text); }
 .modal-body { padding:24px 28px; }
 .field { margin-bottom:20px; }
 .field label { display:block;font-size:.72rem;letter-spacing:.08em;text-transform:uppercase;color:var(--muted2);margin-bottom:8px; }
-.field input,.field textarea,.field select {
-  width:100%;background:var(--card);
-  border:1px solid var(--border2);
-  border-radius:8px;
-  padding:12px 14px;
-  color:var(--text);
-  font-family:'DM Mono',monospace;
-  font-size:.85rem;
-  transition:border-color .2s;
-  outline:none;
-  resize:vertical;
-}
+.field input,.field textarea,.field select { width:100%;background:var(--card); border:1px solid var(--border2); border-radius:8px; padding:12px 14px; color:var(--text); font-family:'DM Mono',monospace; font-size:.85rem; transition:border-color .2s; outline:none; resize:vertical; }
 .field input:focus,.field textarea:focus,.field select:focus { border-color:var(--accent); }
-.field select option { background:var(--card); }
 .model-grid { display:grid;grid-template-columns:1fr 1fr;gap:8px; }
-.model-opt {
-  padding:12px;border-radius:8px;border:1px solid var(--border2);
-  cursor:pointer;transition:all .2s;text-align:center;
-}
-.model-opt:hover { border-color:var(--border2); }
+.model-opt { padding:12px;border-radius:8px;border:1px solid var(--border2); cursor:pointer;transition:all .2s;text-align:center; }
 .model-opt.sel { border-color:var(--accent);background:rgba(0,245,160,.06); }
 .model-name { font-family:'Syne',sans-serif;font-weight:700;font-size:.82rem; }
 .model-desc { font-size:.65rem;color:var(--muted2);margin-top:3px; }
@@ -264,37 +128,24 @@ body{background:var(--bg);color:var(--text);font-family:'DM Mono',monospace;disp
 .btn-deploy { padding:10px 26px;border-radius:6px;background:var(--accent);color:#000;font-family:'Syne',sans-serif;font-weight:700;font-size:.82rem;border:none;cursor:pointer;transition:all .2s; }
 .btn-deploy:hover { background:#00e090; }
 .btn-deploy:disabled { opacity:.5;cursor:not-allowed; }
-
-/* CHAT VIEW */
 .chat-layout { display:grid;grid-template-columns:280px 1fr;gap:14px;height:calc(100vh - 56px - 56px); }
 .chat-agents { background:var(--card);border:1px solid var(--border);border-radius:12px;overflow-y:auto; }
-.chat-agents::-webkit-scrollbar{width:3px;}
-.chat-agents::-webkit-scrollbar-thumb{background:var(--border2);}
 .ca-header { padding:16px;border-bottom:1px solid var(--border);font-size:.72rem;letter-spacing:.1em;text-transform:uppercase;color:var(--muted2); }
-.ca-item {
-  padding:14px 16px;border-bottom:1px solid var(--border);cursor:pointer;
-  transition:background .15s;display:flex;align-items:center;gap:10px;
-}
+.ca-item { padding:14px 16px;border-bottom:1px solid var(--border);cursor:pointer; transition:background .15s;display:flex;align-items:center;gap:10px; }
 .ca-item:hover { background:var(--surface); }
 .ca-item.active { background:rgba(0,245,160,.06); }
 .ca-av { width:32px;height:32px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:1rem;flex-shrink:0; }
 .ca-name { font-family:'Syne',sans-serif;font-weight:600;font-size:.82rem; }
 .ca-sub { font-size:.65rem;color:var(--muted2);margin-top:1px; }
-
 .chat-window { background:var(--card);border:1px solid var(--border);border-radius:12px;display:flex;flex-direction:column;overflow:hidden; }
 .chat-header { padding:16px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:12px; }
 .chat-agent-name { font-family:'Syne',sans-serif;font-weight:700; }
 .chat-agent-model { font-size:.7rem;color:var(--muted2); }
 .chat-msgs { flex:1;overflow-y:auto;padding:20px;display:flex;flex-direction:column;gap:14px; }
-.chat-msgs::-webkit-scrollbar{width:3px;}
-.chat-msgs::-webkit-scrollbar-thumb{background:var(--border2);}
 .msg { display:flex;gap:10px;max-width:80%; }
 .msg.user { align-self:flex-end;flex-direction:row-reverse; }
 .msg-av { width:28px;height:28px;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:.75rem;flex-shrink:0;margin-top:2px; }
-.msg-bubble {
-  padding:12px 16px;border-radius:12px;font-size:.82rem;line-height:1.6;
-  background:var(--surface);border:1px solid var(--border2);
-}
+.msg-bubble { padding:12px 16px;border-radius:12px;font-size:.82rem;line-height:1.6; background:var(--surface);border:1px solid var(--border2); }
 .msg.user .msg-bubble { background:rgba(0,245,160,.1);border-color:rgba(0,245,160,.2);color:var(--text); }
 .msg-time { font-size:.6rem;color:var(--muted);margin-top:4px;text-align:right; }
 .typing-dots { display:flex;gap:4px;align-items:center;padding:4px 0; }
@@ -303,57 +154,21 @@ body{background:var(--bg);color:var(--text);font-family:'DM Mono',monospace;disp
 .typing-dots span:nth-child(3){animation-delay:.4s;}
 @keyframes typingBounce{0%,60%,100%{transform:translateY(0)}30%{transform:translateY(-6px)}}
 .chat-input-area { padding:16px;border-top:1px solid var(--border);display:flex;gap:10px; }
-.chat-input {
-  flex:1;background:var(--surface);border:1px solid var(--border2);
-  border-radius:8px;padding:12px 16px;color:var(--text);
-  font-family:'DM Mono',monospace;font-size:.82rem;outline:none;
-  transition:border-color .2s;resize:none;height:44px;
-}
+.chat-input { flex:1;background:var(--surface);border:1px solid var(--border2); border-radius:8px;padding:12px 16px;color:var(--text); font-family:'DM Mono',monospace;font-size:.82rem;outline:none; transition:border-color .2s;resize:none;height:44px; }
 .chat-input:focus { border-color:var(--accent); }
 .chat-send { background:var(--accent);color:#000;border:none;border-radius:8px;padding:0 18px;font-family:'Syne',sans-serif;font-weight:700;font-size:.82rem;cursor:pointer;transition:all .2s; }
 .chat-send:hover { background:#00e090; }
 .chat-send:disabled { opacity:.4;cursor:not-allowed; }
-
-/* ANALYTICS */
-.analytics-layout { display:flex;flex-direction:column;gap:18px; }
-.chart-card { background:var(--card);border:1px solid var(--border);border-radius:12px;padding:22px; }
-.chart-title { font-family:'Syne',sans-serif;font-weight:700;font-size:.95rem;margin-bottom:4px; }
-.chart-sub { font-size:.72rem;color:var(--muted2);margin-bottom:20px; }
-.bar-chart { display:flex;align-items:flex-end;gap:6px;height:120px; }
-.bar-wrap { flex:1;display:flex;flex-direction:column;align-items:center;gap:6px; }
-.bar {
-  width:100%;border-radius:4px 4px 0 0;
-  background:linear-gradient(180deg,var(--accent),rgba(0,245,160,.3));
-  transition:height .8s cubic-bezier(.4,0,.2,1);
-  min-height:4px;
-}
-.bar-label { font-size:.6rem;color:var(--muted);text-align:center; }
-.bar-val { font-size:.62rem;color:var(--accent);font-family:'Syne',sans-serif;font-weight:700; }
-.ana-grid { display:grid;grid-template-columns:1fr 1fr;gap:14px; }
-.mini-table { width:100%;border-collapse:collapse; }
-.mini-table th { font-size:.65rem;letter-spacing:.1em;text-transform:uppercase;color:var(--muted2);padding:0 0 10px;text-align:left;border-bottom:1px solid var(--border); }
-.mini-table td { font-size:.78rem;padding:10px 0;border-bottom:1px solid var(--border);color:var(--muted2); }
-.mini-table td:first-child { color:var(--text); }
-.progress-bar { height:4px;background:var(--border2);border-radius:2px;overflow:hidden;margin-top:4px; }
-.progress-fill { height:100%;background:linear-gradient(90deg,var(--accent),var(--accent2));border-radius:2px;transition:width 1s ease; }
-
-/* EMBED */
 .embed-layout { display:flex;flex-direction:column;gap:18px; }
 .embed-card { background:var(--card);border:1px solid var(--border);border-radius:12px;padding:24px; }
 .embed-title { font-family:'Syne',sans-serif;font-weight:700;margin-bottom:6px; }
 .embed-sub { font-size:.78rem;color:var(--muted2);margin-bottom:16px;line-height:1.6; }
-.code-block {
-  background:var(--bg);border:1px solid var(--border2);border-radius:8px;
-  padding:16px;font-size:.78rem;line-height:1.8;
-  color:var(--accent2);overflow-x:auto;position:relative;
-}
+.code-block { background:var(--bg);border:1px solid var(--border2);border-radius:8px; padding:16px;font-size:.78rem;line-height:1.8; color:var(--accent2);overflow-x:auto;position:relative; }
 .code-copy { position:absolute;top:10px;right:10px;background:var(--border2);border:none;color:var(--muted2);font-family:'DM Mono',monospace;font-size:.65rem;padding:4px 10px;border-radius:4px;cursor:pointer;transition:all .2s; }
 .code-copy:hover { background:var(--accent);color:#000; }
 .code-red { color: #ff7070; }
 .code-green { color: var(--accent); }
 .code-yellow { color: var(--warn); }
-
-/* DEPLOY PROGRESS */
 .deploy-overlay { position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:2000;display:none;align-items:center;justify-content:center;backdrop-filter:blur(8px); }
 .deploy-overlay.open { display:flex; }
 .deploy-box { background:var(--surface);border:1px solid var(--border2);border-radius:16px;padding:40px;width:480px;text-align:center; }
@@ -366,164 +181,170 @@ body{background:var(--bg);color:var(--text);font-family:'DM Mono',monospace;disp
 .ds-icon { width:22px;text-align:center;flex-shrink:0; }
 .ds-text { color:var(--muted2); }
 .ds-text.done { color:var(--accent); }
-.ds-text.active { color:var(--text); }
 .deploy-bar-wrap { background:var(--border2);border-radius:4px;height:4px;overflow:hidden; }
 .deploy-bar { height:100%;background:linear-gradient(90deg,var(--accent),var(--accent2));border-radius:4px;transition:width .4s ease; }
-
-/* NOTIFICATION */
 .notif { position:fixed;bottom:24px;right:24px;background:var(--card);border:1px solid var(--accent);border-radius:10px;padding:14px 20px;display:flex;align-items:center;gap:10px;z-index:3000;transform:translateY(80px);opacity:0;transition:all .3s ease; }
 .notif.show { transform:translateY(0);opacity:1; }
 .notif-icon { font-size:1.1rem; }
 .notif-text { font-size:.8rem; }
-
-/* RESPONSIVE */
-@media(max-width:900px){
-  .stats-row{grid-template-columns:repeat(2,1fr);}
-  .chat-layout{grid-template-columns:1fr;}
-  .chat-agents{display:none;}
-}
+.empty-state { text-align:center;color:var(--muted);font-size:.8rem;padding:30px 0; }
+.upgrade-screen { height:100vh;width:100%;display:flex;align-items:center;justify-content:center;background:var(--bg);color:var(--text);text-align:center;padding:20px; }
+@media(max-width:900px){ .stats-row{grid-template-columns:repeat(2,1fr);} .chat-layout{grid-template-columns:1fr;} .chat-agents{display:none;} }
 </style>
 </head>
 <body>
 
-<!-- SIDEBAR -->
-<aside class="sidebar">
-  <div class="sb-logo">
-    Agent<span>Host</span>
-    <small>DASHBOARD v1.0</small>
-  </div>
+<script>
+  // ===== AUTH + TRIAL GATE — runs before anything renders =====
+  const SUPABASE_URL = "https://cdhkzvpwmkcbxrvqujhb.supabase.co";
+const SUPABASE_ANON_KEY = "sb_publishable_mScm4_dfvFTqNiBctoljKA_V9uFdhU6";
+  const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+  let currentUser = null;
+  let accessToken = null;
 
+  async function gateCheck() {
+    const { data: { session } } = await supabaseClient.auth.getSession();
+    if (!session) { window.location.href = "/agenthost-auth.html"; return; }
+
+    accessToken = session.access_token;
+    const { data: userRow, error } = await supabaseClient
+      .from("users")
+      .select("plan, subscription_status, trial_ends_at, email")
+      .eq("id", session.user.id)
+      .single();
+
+    if (error || !userRow) { window.location.href = "/agenthost-auth.html"; return; }
+
+    const isExpired = userRow.subscription_status === "expired" ||
+      (userRow.plan === "free" && new Date(userRow.trial_ends_at) < new Date());
+
+    if (isExpired) { showUpgradeScreen(userRow.email); return; }
+
+    currentUser = { id: session.user.id, ...userRow };
+    document.body.style.visibility = "visible";
+    initDashboard();
+  }
+
+  function showUpgradeScreen(email) {
+    document.body.style.visibility = "visible";
+    document.body.innerHTML = `
+      <div class="upgrade-screen">
+        <div style="max-width:420px">
+          <div style="font-size:2rem;margin-bottom:16px;font-family:'Syne',sans-serif;font-weight:800">Your free trial has ended</div>
+          <p style="color:#6a7490;margin-bottom:28px;line-height:1.6">Your 14-day trial for ${email} is over. Pick a plan to keep your agents live.</p>
+          <a href="https://rzp.io/l/agenthost-pro" style="display:inline-block;background:#00f5a0;color:#000;padding:12px 28px;border-radius:6px;text-decoration:none;font-weight:700;margin:0 8px 12px;font-family:'Syne',sans-serif">Upgrade to Pro — $49/mo</a><br/>
+          <a href="https://rzp.io/l/agenthost-agency" style="display:inline-block;background:transparent;color:#00f5a0;border:1px solid #00f5a0;padding:12px 28px;border-radius:6px;text-decoration:none;font-weight:700;margin:0 8px;font-family:'Syne',sans-serif">Upgrade to Agency — $99/mo</a>
+        </div>
+      </div>`;
+  }
+
+  gateCheck();
+</script>
+
+<aside class="sidebar">
+  <div class="sb-logo">Agent<span>Host</span><small>DASHBOARD v1.0</small></div>
   <div class="sb-section">
     <div class="sb-label">Main</div>
-    <div class="sb-item active" onclick="nav('overview',this)">
-      <span class="sb-icon">⬡</span> Overview
-    </div>
-    <div class="sb-item" onclick="nav('agents',this)">
-      <span class="sb-icon">🤖</span> My Agents
-      <span class="sb-badge" id="agentCount">3</span>
-    </div>
-    <div class="sb-item" onclick="nav('chat',this)">
-      <span class="sb-icon">💬</span> Live Test
-    </div>
+    <div class="sb-item active" onclick="nav('overview',this)"><span class="sb-icon">⬡</span> Overview</div>
+    <div class="sb-item" onclick="nav('agents',this)"><span class="sb-icon">🤖</span> My Agents<span class="sb-badge" id="agentCount">0</span></div>
+    <div class="sb-item" onclick="nav('chat',this)"><span class="sb-icon">💬</span> Live Test</div>
   </div>
-
   <div class="sb-section">
     <div class="sb-label">Insights</div>
-    <div class="sb-item" onclick="nav('analytics',this)">
-      <span class="sb-icon">📊</span> Analytics
-    </div>
-    <div class="sb-item" onclick="nav('embed',this)">
-      <span class="sb-icon">🔗</span> Embed & Deploy
-    </div>
+    <div class="sb-item" onclick="nav('analytics',this)"><span class="sb-icon">📊</span> Analytics</div>
+    <div class="sb-item" onclick="nav('embed',this)"><span class="sb-icon">🔗</span> Embed & Deploy</div>
   </div>
-
   <div class="sb-section">
     <div class="sb-label">Account</div>
-    <div class="sb-item" onclick="nav('settings',this)">
-      <span class="sb-icon">⚙️</span> Settings
-    </div>
+    <div class="sb-item" onclick="nav('settings',this)"><span class="sb-icon">⚙️</span> Settings</div>
   </div>
-
   <div class="sb-bottom">
     <div class="user-pill">
-      <div class="user-av">T</div>
+      <div class="user-av" id="userAvatar">?</div>
       <div class="user-info">
-        <div class="user-name">Tarannum</div>
-        <div class="user-plan">PRO PLAN</div>
+        <div class="user-name" id="sidebarName">Loading…</div>
+        <div class="user-plan" id="sidebarPlan"></div>
       </div>
     </div>
+    <button class="signout-btn" onclick="signOut()">Sign out</button>
   </div>
 </aside>
 
-<!-- MAIN -->
 <div class="main">
   <div class="topbar">
     <div class="page-title" id="pageTitle">Overview</div>
-    <div class="topbar-right">
-      <button class="tb-btn" onclick="openModal()">+ New Agent</button>
-    </div>
+    <div class="topbar-right"><button class="tb-btn" onclick="openModal()">+ New Agent</button></div>
   </div>
 
   <div class="content">
 
-    <!-- OVERVIEW -->
     <div class="view active" id="view-overview">
       <div class="stats-row">
         <div class="stat-card" style="--line-color:var(--accent)">
           <div class="sc-label">Active Agents</div>
-          <div class="sc-val" style="color:var(--accent)">3</div>
-          <div class="sc-delta up">↑ 1 this week</div>
+          <div class="sc-val" style="color:var(--accent)" id="statActiveAgents">0</div>
+          <div class="sc-delta muted" id="statAgentsSub">of your total agents</div>
         </div>
         <div class="stat-card" style="--line-color:var(--accent2)">
-          <div class="sc-label">Total Messages</div>
-          <div class="sc-val" style="color:var(--accent2)">2,847</div>
-          <div class="sc-delta up">↑ 18% vs last week</div>
+          <div class="sc-label">Messages This Month</div>
+          <div class="sc-val" style="color:var(--accent2)" id="statMessages">0</div>
+          <div class="sc-delta muted" id="statMessagesSub">of plan limit</div>
         </div>
         <div class="stat-card" style="--line-color:var(--warn)">
-          <div class="sc-label">MRR (USD)</div>
-          <div class="sc-val" style="color:var(--warn)">$580</div>
-          <div class="sc-delta up">↑ $200 this month</div>
+          <div class="sc-label">Your Plan</div>
+          <div class="sc-val" style="color:var(--warn);font-size:1.4rem" id="statPlan">—</div>
+          <div class="sc-delta muted" id="statPlanSub"></div>
         </div>
         <div class="stat-card" style="--line-color:#a78bfa">
-          <div class="sc-label">Avg Response</div>
-          <div class="sc-val" style="color:#a78bfa">1.4s</div>
-          <div class="sc-delta up">↑ 0.2s faster</div>
+          <div class="sc-label">Total Agents</div>
+          <div class="sc-val" style="color:#a78bfa" id="statTotalAgents">0</div>
+          <div class="sc-delta muted">live + paused</div>
         </div>
       </div>
 
       <div style="display:grid;grid-template-columns:1fr 320px;gap:14px">
-        <div class="chart-card">
-          <div class="chart-title">Message Volume — Last 7 Days</div>
-          <div class="chart-sub">Total conversations across all agents</div>
-          <div class="bar-chart" id="overviewChart"></div>
+        <div class="chart-card" style="background:var(--card);border:1px solid var(--border);border-radius:12px;padding:22px">
+          <div class="chart-title" style="font-family:'Syne',sans-serif;font-weight:700;font-size:.95rem;margin-bottom:4px">Agent Activity</div>
+          <div class="chart-sub" style="font-size:.72rem;color:var(--muted2);margin-bottom:20px">Messages per agent, this month</div>
+          <div id="agentActivity"><div class="empty-state">No messages yet — deploy an agent and test it to see activity here.</div></div>
         </div>
-        <div class="chart-card">
-          <div class="chart-title">Agent Activity</div>
-          <div class="chart-sub">Messages per agent</div>
-          <div id="agentActivity"></div>
+        <div class="chart-card" style="background:var(--card);border:1px solid var(--border);border-radius:12px;padding:22px">
+          <div class="chart-title" style="font-family:'Syne',sans-serif;font-weight:700;font-size:.95rem;margin-bottom:4px">Your Agents</div>
+          <div class="chart-sub" style="font-size:.72rem;color:var(--muted2);margin-bottom:20px">Status at a glance</div>
+          <div id="agentStatusList"><div class="empty-state">No agents yet.</div></div>
         </div>
       </div>
 
       <div style="margin-top:14px">
-        <div class="chart-card">
-          <div class="chart-title">Recent Conversations</div>
-          <div class="chart-sub">Latest interactions across your agents</div>
-          <table class="mini-table">
-            <thead><tr><th>Agent</th><th>User Message</th><th>Time</th><th>Status</th></tr></thead>
-            <tbody id="recentConvs"></tbody>
+        <div class="chart-card" style="background:var(--card);border:1px solid var(--border);border-radius:12px;padding:22px">
+          <div class="chart-title" style="font-family:'Syne',sans-serif;font-weight:700;font-size:.95rem;margin-bottom:4px">Recent Conversations</div>
+          <div class="chart-sub" style="font-size:.72rem;color:var(--muted2);margin-bottom:20px">Latest real messages across your agents</div>
+          <table class="mini-table" style="width:100%;border-collapse:collapse">
+            <thead><tr>
+              <th style="font-size:.65rem;letter-spacing:.1em;text-transform:uppercase;color:var(--muted2);padding:0 0 10px;text-align:left;border-bottom:1px solid var(--border)">Agent</th>
+              <th style="font-size:.65rem;letter-spacing:.1em;text-transform:uppercase;color:var(--muted2);padding:0 0 10px;text-align:left;border-bottom:1px solid var(--border)">Message</th>
+              <th style="font-size:.65rem;letter-spacing:.1em;text-transform:uppercase;color:var(--muted2);padding:0 0 10px;text-align:left;border-bottom:1px solid var(--border)">Time</th>
+            </tr></thead>
+            <tbody id="recentConvs"><tr><td colspan="3" class="empty-state">No conversations yet.</td></tr></tbody>
           </table>
         </div>
       </div>
     </div>
 
-    <!-- AGENTS -->
-    <div class="view" id="view-agents">
-      <div class="agents-grid" id="agentsGrid"></div>
-    </div>
+    <div class="view" id="view-agents"><div class="agents-grid" id="agentsGrid"></div></div>
 
-    <!-- CHAT -->
     <div class="view" id="view-chat">
       <div class="chat-layout">
         <div class="chat-agents">
           <div class="ca-header">Select Agent</div>
-          <div id="chatAgentList"></div>
+          <div id="chatAgentList"><div class="empty-state">No agents yet — create one first.</div></div>
         </div>
         <div class="chat-window">
           <div class="chat-header">
             <div id="chatAgentAv" class="ac-icon" style="width:36px;height:36px;border-radius:8px;font-size:1.1rem;display:flex;align-items:center;justify-content:center;background:rgba(0,245,160,.1)">🤖</div>
-            <div>
-              <div class="chat-agent-name" id="chatAgentName">Select an agent</div>
-              <div class="chat-agent-model" id="chatAgentModel">Choose from the left panel</div>
-            </div>
-            <div style="margin-left:auto;display:flex;align-items:center;gap:6px;font-size:.65rem;color:var(--accent)" id="chatStatus">
-              <span style="width:6px;height:6px;border-radius:50%;background:var(--accent);display:inline-block"></span>LIVE
-            </div>
+            <div><div class="chat-agent-name" id="chatAgentName">Select an agent</div><div class="chat-agent-model" id="chatAgentModel">Choose from the left panel</div></div>
           </div>
-          <div class="chat-msgs" id="chatMsgs">
-            <div style="text-align:center;color:var(--muted);font-size:.78rem;margin:auto">
-              Select an agent and start a conversation to test it live using the Anthropic API.
-            </div>
-          </div>
+          <div class="chat-msgs" id="chatMsgs"><div class="empty-state">Select an agent and start a conversation. Uses AgentHost's own API — no key needed from you.</div></div>
           <div class="chat-input-area">
             <textarea class="chat-input" id="chatInput" placeholder="Type a message..." rows="1" onkeydown="handleChatKey(event)"></textarea>
             <button class="chat-send" id="chatSend" onclick="sendMessage()" disabled>Send</button>
@@ -532,197 +353,111 @@ body{background:var(--bg);color:var(--text);font-family:'DM Mono',monospace;disp
       </div>
     </div>
 
-    <!-- ANALYTICS -->
     <div class="view" id="view-analytics">
-      <div class="analytics-layout">
-        <div class="stats-row">
-          <div class="stat-card" style="--line-color:var(--accent)">
-            <div class="sc-label">Total Messages</div>
-            <div class="sc-val" style="color:var(--accent)">2,847</div>
-            <div class="sc-delta up">↑ 18% this week</div>
-          </div>
-          <div class="stat-card" style="--line-color:var(--accent2)">
-            <div class="sc-label">Avg Session Length</div>
-            <div class="sc-val" style="color:var(--accent2)">4.2</div>
-            <div class="sc-delta up">↑ messages/session</div>
-          </div>
-          <div class="stat-card" style="--line-color:var(--warn)">
-            <div class="sc-label">Satisfaction Rate</div>
-            <div class="sc-val" style="color:var(--warn)">94%</div>
-            <div class="sc-delta up">↑ 3% improvement</div>
-          </div>
-          <div class="stat-card" style="--line-color:#a78bfa">
-            <div class="sc-label">Tokens Used</div>
-            <div class="sc-val" style="color:#a78bfa">1.2M</div>
-            <div class="sc-delta up">This month</div>
-          </div>
-        </div>
-        <div class="chart-card">
-          <div class="chart-title">Daily Message Volume — Last 14 Days</div>
-          <div class="chart-sub">Across all active agents</div>
-          <div class="bar-chart" id="analyticsChart"></div>
-        </div>
-        <div class="ana-grid">
-          <div class="chart-card">
-            <div class="chart-title">Top Performing Agents</div>
-            <div class="chart-sub">By message count this month</div>
-            <div id="topAgents"></div>
-          </div>
-          <div class="chart-card">
-            <div class="chart-title">Response Time Distribution</div>
-            <div class="chart-sub">Latency breakdown</div>
-            <div id="latencyDist"></div>
-          </div>
-        </div>
+      <div class="chart-card" style="background:var(--card);border:1px solid var(--border);border-radius:12px;padding:22px">
+        <div class="chart-title" style="font-family:'Syne',sans-serif;font-weight:700;font-size:.95rem;margin-bottom:4px">Usage This Month</div>
+        <div class="chart-sub" style="font-size:.72rem;color:var(--muted2);margin-bottom:20px">Real message counts against your plan limit</div>
+        <div id="analyticsSummary"><div class="empty-state">No usage yet this month.</div></div>
       </div>
     </div>
 
-    <!-- EMBED -->
     <div class="view" id="view-embed">
       <div class="embed-layout">
         <div class="embed-card">
-          <div class="embed-title">🔗 Embed Your Agent</div>
-          <div class="embed-sub">Copy and paste this snippet into any website. Your agent will appear as a chat widget. Replace <code style="color:var(--accent)">YOUR_AGENT_ID</code> with your actual agent ID.</div>
-          <div class="code-block">
-            <button class="code-copy" onclick="copyCode(this,'embed1')">Copy</button>
-            <div id="embed1">&lt;<span class="code-red">script</span>
-  <span class="code-yellow">src</span>=<span class="code-green">"https://agenthost.io/widget.js"</span>
-  <span class="code-yellow">data-agent</span>=<span class="code-green">"YOUR_AGENT_ID"</span>
-  <span class="code-yellow">data-theme</span>=<span class="code-green">"dark"</span>
-  <span class="code-yellow">data-position</span>=<span class="code-green">"bottom-right"</span>
-  <span class="code-yellow">defer</span>
-&gt;&lt;/<span class="code-red">script</span>&gt;</div>
-          </div>
-        </div>
-        <div class="embed-card">
-          <div class="embed-title">⚡ REST API</div>
-          <div class="embed-sub">Use our API to send messages programmatically from your backend, mobile app, or automation tools.</div>
-          <div class="code-block">
-            <button class="code-copy" onclick="copyCode(this,'embed2')">Copy</button>
-            <div id="embed2"><span class="code-yellow">POST</span> https://api.agenthost.io/v1/chat
-
-<span class="code-red">Authorization</span>: Bearer <span class="code-green">ah_live_xxxxxxxxxxxx</span>
-<span class="code-red">Content-Type</span>: application/json
-
-{
-  <span class="code-yellow">"agent_id"</span>: <span class="code-green">"YOUR_AGENT_ID"</span>,
-  <span class="code-yellow">"message"</span>: <span class="code-green">"Hello, I need help"</span>,
-  <span class="code-yellow">"session_id"</span>: <span class="code-green">"user_123"</span>
-}</div>
-          </div>
-        </div>
-        <div class="embed-card">
-          <div class="embed-title">📱 Your Active Agent URLs</div>
-          <div class="embed-sub">Each deployed agent gets a unique shareable URL. Send it directly to clients or embed it in an iframe.</div>
-          <div id="embedLinks"></div>
+          <div class="embed-title">📱 Your Agent IDs</div>
+          <div class="embed-sub">Use these with the embed script or REST API. Full embed docs coming as agent hosting URLs go live.</div>
+          <div id="embedLinks"><div class="empty-state">No agents yet.</div></div>
         </div>
       </div>
     </div>
 
-    <!-- SETTINGS -->
     <div class="view" id="view-settings">
       <div class="embed-card" style="background:var(--card);border:1px solid var(--border);border-radius:12px;padding:28px;max-width:560px">
         <div class="embed-title" style="font-family:'Syne',sans-serif;font-weight:700;font-size:1rem;margin-bottom:20px">Account Settings</div>
-        <div class="field">
-          <label>Your Name</label>
-          <input type="text" value="Tarannum" />
-        </div>
-        <div class="field">
-          <label>Email</label>
-          <input type="email" value="hello@agenthost.io" />
-        </div>
-        <div class="field">
-          <label>Anthropic API Key (for live testing)</label>
-          <input type="password" id="apiKeyInput" placeholder="sk-ant-api03-..." />
-        </div>
-        <div class="field">
-          <label>Current Plan</label>
-          <input type="text" value="Pro — $29/month" readonly style="opacity:.6" />
-        </div>
-        <button class="btn-deploy" onclick="saveSettings()" style="margin-top:8px">Save Settings</button>
+        <div class="field"><label>Email</label><input type="email" id="settingsEmail" readonly style="opacity:.7" /></div>
+        <div class="field"><label>Current Plan</label><input type="text" id="settingsPlan" readonly style="opacity:.7" /></div>
+        <p style="font-size:.75rem;color:var(--muted2);margin-top:-8px;margin-bottom:16px">To change plans, use the upgrade links shown when your trial ends, or contact support.</p>
       </div>
     </div>
 
   </div>
 </div>
 
-<!-- CREATE AGENT MODAL -->
 <div class="modal-overlay" id="createModal">
   <div class="modal">
-    <div class="modal-head">
-      <div class="modal-title">🚀 Create New Agent</div>
-      <button class="modal-close" onclick="closeModal()">✕</button>
-    </div>
+    <div class="modal-head"><div class="modal-title">🚀 Create New Agent</div><button class="modal-close" onclick="closeModal()">✕</button></div>
     <div class="modal-body">
-      <div class="field">
-        <label>Agent Name</label>
-        <input type="text" id="agentName" placeholder="e.g. Support Bot, Sales Assistant..." />
-      </div>
-      <div class="field">
-        <label>Emoji Icon</label>
-        <input type="text" id="agentEmoji" placeholder="🤖" maxlength="2" value="🤖" />
-      </div>
-      <div class="field">
-        <label>Description</label>
-        <input type="text" id="agentDesc" placeholder="What does this agent do?" />
-      </div>
-      <div class="field">
-        <label>System Prompt (Personality & Instructions)</label>
-        <textarea id="agentPrompt" rows="4" placeholder="You are a helpful assistant for [business name]. Your job is to..."></textarea>
-      </div>
-      <div class="field">
-        <label>AI Model</label>
+      <div class="field"><label>Agent Name</label><input type="text" id="agentName" placeholder="e.g. Support Bot, Sales Assistant..." /></div>
+      <div class="field"><label>Emoji Icon</label><input type="text" id="agentEmoji" placeholder="🤖" maxlength="2" value="🤖" /></div>
+      <div class="field"><label>Description</label><input type="text" id="agentDesc" placeholder="What does this agent do?" /></div>
+      <div class="field"><label>System Prompt (Personality & Instructions)</label><textarea id="agentPrompt" rows="4" placeholder="You are a helpful assistant for [business name]. Your job is to..."></textarea></div>
+      <div class="field"><label>AI Model</label>
         <div class="model-grid">
-          <div class="model-opt sel" onclick="selModel(this,'claude-sonnet-4-20250514')">
-            <div class="model-name">Claude Sonnet 4</div>
-            <div class="model-desc">Smart & fast · Recommended</div>
-          </div>
-          <div class="model-opt" onclick="selModel(this,'claude-haiku-4-5-20251001')">
-            <div class="model-name">Claude Haiku 4.5</div>
-            <div class="model-desc">Ultra-fast · Cost efficient</div>
-          </div>
+          <div class="model-opt sel" onclick="selModel(this,'claude-sonnet-4-20250514')"><div class="model-name">Claude Sonnet 4</div><div class="model-desc">Smart & fast · Recommended</div></div>
+          <div class="model-opt" onclick="selModel(this,'claude-haiku-4-5-20251001')"><div class="model-name">Claude Haiku 4.5</div><div class="model-desc">Ultra-fast · Cost efficient</div></div>
         </div>
       </div>
     </div>
-    <div class="modal-foot">
-      <button class="btn-cancel" onclick="closeModal()">Cancel</button>
-      <button class="btn-deploy" onclick="deployAgent()">⚡ Deploy Agent</button>
-    </div>
+    <div class="modal-foot"><button class="btn-cancel" onclick="closeModal()">Cancel</button><button class="btn-deploy" onclick="deployAgent()">⚡ Deploy Agent</button></div>
   </div>
 </div>
 
-<!-- DEPLOY PROGRESS -->
 <div class="deploy-overlay" id="deployOverlay">
   <div class="deploy-box">
-    <div class="deploy-icon" id="deployIcon">⚡</div>
-    <div class="deploy-title" id="deployTitle">Deploying Agent...</div>
-    <div class="deploy-sub" id="deploySub">Setting up your AI agent infrastructure</div>
-    <div class="deploy-steps" id="deploySteps"></div>
-    <div class="deploy-bar-wrap">
-      <div class="deploy-bar" id="deployBar" style="width:0%"></div>
-    </div>
+    <div class="deploy-icon">⚡</div>
+    <div class="deploy-title">Deploying Agent...</div>
+    <div class="deploy-sub">Saving your agent to AgentHost</div>
+    <div class="deploy-bar-wrap"><div class="deploy-bar" id="deployBar" style="width:0%"></div></div>
   </div>
 </div>
 
-<!-- NOTIFICATION -->
-<div class="notif" id="notif">
-  <span class="notif-icon" id="notifIcon">✅</span>
-  <span class="notif-text" id="notifText">Done!</span>
-</div>
+<div class="notif" id="notif"><span class="notif-icon" id="notifIcon">✅</span><span class="notif-text" id="notifText">Done!</span></div>
 
 <script>
 // ===== STATE =====
-let agents = [
-  { id: 'a1', name: 'Support Bot', emoji: '🛟', desc: 'Handles customer support queries 24/7 with instant responses.', model: 'claude-sonnet-4-20250514', prompt: 'You are a friendly and helpful customer support agent. Keep responses concise, empathetic, and solution-focused. If you cannot resolve an issue, escalate politely.', live: true, msgs: 1240, clients: 3 },
-  { id: 'a2', name: 'Sales Assistant', emoji: '💼', desc: 'Qualifies leads, answers product questions, and books demos.', model: 'claude-haiku-4-5-20251001', prompt: 'You are a professional sales assistant. Your goal is to understand customer needs, highlight product benefits, and guide them toward booking a demo call. Be persuasive but never pushy.', live: true, msgs: 890, clients: 2 },
-  { id: 'a3', name: 'FAQ Agent', emoji: '📚', desc: 'Answers common questions from your knowledge base instantly.', model: 'claude-sonnet-4-20250514', prompt: 'You are a knowledgeable FAQ assistant. Answer questions accurately and concisely based on the provided information. If unsure, say so honestly rather than guessing.', live: false, msgs: 717, clients: 1 }
-];
-
+let agents = [];
 let selectedModel = 'claude-sonnet-4-20250514';
 let activeChatAgent = null;
 let chatHistory = [];
 let isSending = false;
-let apiKey = '';
+const PLAN_LIMITS = { free: 500, pro: 10000, agency: 100000 };
+
+// ===== INIT (called by gate after auth confirmed) =====
+async function initDashboard() {
+  document.getElementById('sidebarName').textContent = currentUser.email.split('@')[0];
+  document.getElementById('sidebarPlan').textContent = currentUser.plan.toUpperCase() + ' PLAN';
+  document.getElementById('userAvatar').textContent = currentUser.email[0].toUpperCase();
+  document.getElementById('settingsEmail').value = currentUser.email;
+  document.getElementById('settingsPlan').value = currentUser.plan.charAt(0).toUpperCase() + currentUser.plan.slice(1);
+
+  await loadAgents();
+  renderOverview();
+}
+
+async function loadAgents() {
+  const { data, error } = await supabaseClient
+    .from('agents')
+    .select('*')
+    .eq('user_id', currentUser.id)
+    .order('created_at', { ascending: false });
+  if (error) { console.error(error); return; }
+  agents = data || [];
+  document.getElementById('agentCount').textContent = agents.length;
+}
+
+async function getUsageStats() {
+  const monthStart = new Date(); monthStart.setDate(1); monthStart.setHours(0,0,0,0);
+  const { data, error } = await supabaseClient
+    .from('usage_logs')
+    .select('agent_id, role, created_at')
+    .eq('user_id', currentUser.id)
+    .eq('role', 'assistant')
+    .gte('created_at', monthStart.toISOString());
+  if (error) { console.error(error); return { total: 0, byAgent: {} }; }
+  const byAgent = {};
+  (data || []).forEach(r => { byAgent[r.agent_id] = (byAgent[r.agent_id] || 0) + 1; });
+  return { total: (data || []).length, byAgent };
+}
 
 // ===== NAVIGATION =====
 function nav(view, el) {
@@ -740,42 +475,69 @@ function nav(view, el) {
 }
 
 // ===== OVERVIEW =====
-function renderOverview() {
-  const days = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
-  const vals = [180,240,195,320,410,380,290];
-  const max = Math.max(...vals);
-  const chart = document.getElementById('overviewChart');
-  chart.innerHTML = days.map((d,i) => `
-    <div class="bar-wrap">
-      <div class="bar-val">${vals[i]}</div>
-      <div class="bar" style="height:${(vals[i]/max)*100}%"></div>
-      <div class="bar-label">${d}</div>
-    </div>`).join('');
+async function renderOverview() {
+  const live = agents.filter(a => a.is_live).length;
+  document.getElementById('statActiveAgents').textContent = live;
+  document.getElementById('statAgentsSub').textContent = `of ${agents.length} total agents`;
+  document.getElementById('statTotalAgents').textContent = agents.length;
+  document.getElementById('statPlan').textContent = currentUser.plan.charAt(0).toUpperCase() + currentUser.plan.slice(1);
 
-  const act = document.getElementById('agentActivity');
-  act.innerHTML = agents.map(a => `
-    <div style="margin-bottom:14px">
-      <div style="display:flex;justify-content:space-between;font-size:.78rem;margin-bottom:6px">
+  const usage = await getUsageStats();
+  const limit = PLAN_LIMITS[currentUser.plan] ?? PLAN_LIMITS.free;
+  document.getElementById('statMessages').textContent = usage.total.toLocaleString();
+  document.getElementById('statMessagesSub').textContent = `of ${limit.toLocaleString()} this month`;
+  document.getElementById('statPlanSub').textContent = currentUser.subscription_status === 'trial' ? 'Trial active' : '';
+
+  const actEl = document.getElementById('agentActivity');
+  if (agents.length === 0) {
+    actEl.innerHTML = `<div class="empty-state">No agents yet — create one to get started.</div>`;
+  } else {
+    const max = Math.max(1, ...agents.map(a => usage.byAgent[a.id] || 0));
+    actEl.innerHTML = agents.map(a => {
+      const count = usage.byAgent[a.id] || 0;
+      return `<div style="margin-bottom:14px">
+        <div style="display:flex;justify-content:space-between;font-size:.78rem;margin-bottom:6px">
+          <span>${a.emoji} ${a.name}</span>
+          <span style="color:var(--accent);font-family:'Syne',sans-serif;font-weight:700">${count}</span>
+        </div>
+        <div class="progress-bar" style="height:4px;background:var(--border2);border-radius:2px;overflow:hidden;margin-top:4px">
+          <div style="height:100%;width:${(count/max)*100}%;background:linear-gradient(90deg,var(--accent),var(--accent2))"></div>
+        </div>
+      </div>`;
+    }).join('');
+  }
+
+  const statusEl = document.getElementById('agentStatusList');
+  statusEl.innerHTML = agents.length === 0
+    ? `<div class="empty-state">No agents yet.</div>`
+    : agents.map(a => `<div style="display:flex;align-items:center;gap:10px;padding:8px 0;font-size:.8rem">
+        <span class="status-dot ${a.is_live ? 'dot-live' : 'dot-off'}"></span>
         <span>${a.emoji} ${a.name}</span>
-        <span style="color:var(--accent);font-family:'Syne',sans-serif;font-weight:700">${a.msgs}</span>
-      </div>
-      <div class="progress-bar"><div class="progress-fill" style="width:${(a.msgs/1240)*100}%"></div></div>
-    </div>`).join('');
+        <span style="margin-left:auto;color:var(--muted2);font-size:.65rem;text-transform:uppercase">${a.is_live ? 'LIVE' : 'PAUSED'}</span>
+      </div>`).join('');
 
-  const convData = [
-    ['Support Bot','How do I reset my password?','2m ago','✅'],
-    ['Sales Assistant','What are your pricing plans?','8m ago','✅'],
-    ['FAQ Agent','Do you offer a free trial?','15m ago','✅'],
-    ['Support Bot','My order hasn\'t arrived yet','22m ago','✅'],
-    ['Sales Assistant','Can I schedule a demo?','1h ago','✅'],
-  ];
-  document.getElementById('recentConvs').innerHTML = convData.map(r => `
-    <tr>
-      <td>${r[0]}</td>
-      <td style="color:var(--muted2);max-width:220px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${r[1]}</td>
-      <td>${r[2]}</td>
-      <td>${r[3]}</td>
-    </tr>`).join('');
+  const { data: recent } = await supabaseClient
+    .from('usage_logs')
+    .select('agent_id, role, content, created_at')
+    .eq('user_id', currentUser.id)
+    .eq('role', 'user')
+    .order('created_at', { ascending: false })
+    .limit(5);
+
+  const convBody = document.getElementById('recentConvs');
+  if (!recent || recent.length === 0) {
+    convBody.innerHTML = `<tr><td colspan="3" class="empty-state">No conversations yet.</td></tr>`;
+  } else {
+    convBody.innerHTML = recent.map(r => {
+      const agent = agents.find(a => a.id === r.agent_id);
+      const time = new Date(r.created_at).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
+      return `<tr>
+        <td style="font-size:.78rem;padding:10px 0;border-bottom:1px solid var(--border);color:var(--text)">${agent ? agent.emoji + ' ' + agent.name : 'Unknown'}</td>
+        <td style="font-size:.78rem;padding:10px 0;border-bottom:1px solid var(--border);color:var(--muted2);max-width:220px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${r.content}</td>
+        <td style="font-size:.78rem;padding:10px 0;border-bottom:1px solid var(--border);color:var(--muted2)">${time}</td>
+      </tr>`;
+    }).join('');
+  }
 }
 
 // ===== AGENTS =====
@@ -785,37 +547,28 @@ function renderAgents() {
     <div class="agent-card">
       <div class="ac-head">
         <div class="ac-icon" style="background:rgba(0,245,160,.1)">${a.emoji}</div>
-        <div>
-          <div class="ac-name">${a.name}</div>
-          <div class="ac-model">${a.model.includes('sonnet') ? 'Claude Sonnet 4' : 'Claude Haiku 4.5'}</div>
-        </div>
-        <div class="ac-status" style="color:${a.live ? 'var(--accent)' : 'var(--muted)'}">
-          <span class="status-dot ${a.live ? 'dot-live' : 'dot-off'}"></span>
-          ${a.live ? 'LIVE' : 'DRAFT'}
+        <div><div class="ac-name">${a.name}</div><div class="ac-model">${a.model.includes('sonnet') ? 'Claude Sonnet 4' : 'Claude Haiku 4.5'}</div></div>
+        <div class="ac-status" style="color:${a.is_live ? 'var(--accent)' : 'var(--muted)'}">
+          <span class="status-dot ${a.is_live ? 'dot-live' : 'dot-off'}"></span>${a.is_live ? 'LIVE' : 'PAUSED'}
         </div>
       </div>
-      <div class="ac-desc">${a.desc}</div>
-      <div class="ac-stats">
-        <div><div class="ac-stat-val">${a.msgs.toLocaleString()}</div><div class="ac-stat-label">Messages</div></div>
-        <div><div class="ac-stat-val">${a.clients}</div><div class="ac-stat-label">Clients</div></div>
-        <div><div class="ac-stat-val">${a.live ? '99.9%' : '—'}</div><div class="ac-stat-label">Uptime</div></div>
-      </div>
+      <div class="ac-desc">${a.description || 'No description yet.'}</div>
       <div class="ac-actions">
         <button class="ac-btn" onclick="testAgent('${a.id}')">💬 Test</button>
-        <button class="ac-btn" onclick="copyEmbed('${a.id}')">🔗 Embed</button>
-        <button class="ac-btn ${a.live ? '' : 'primary'}" onclick="toggleLive('${a.id}')">${a.live ? '⏸ Pause' : '▶ Go Live'}</button>
+        <button class="ac-btn ${a.is_live ? '' : 'primary'}" onclick="toggleLive('${a.id}')">${a.is_live ? '⏸ Pause' : '▶ Go Live'}</button>
       </div>
     </div>`).join('') + `
-    <div class="add-agent-card" onclick="openModal()">
-      <div class="add-icon">+</div>
-      <div class="add-label">Create New Agent</div>
-      <div class="add-sub">Deploy in under 60 seconds</div>
-    </div>`;
+    <div class="add-agent-card" onclick="openModal()"><div class="add-icon">+</div><div class="add-label">Create New Agent</div><div class="add-sub">Deploy in seconds</div></div>`;
 }
 
-function toggleLive(id) {
+async function toggleLive(id) {
   const a = agents.find(x => x.id === id);
-  if (a) { a.live = !a.live; renderAgents(); notify(a.live ? `${a.emoji} ${a.name} is now LIVE` : `${a.emoji} ${a.name} paused`); }
+  if (!a) return;
+  const { error } = await supabaseClient.from('agents').update({ is_live: !a.is_live }).eq('id', id).eq('user_id', currentUser.id);
+  if (error) { notify('⚠ Could not update agent'); return; }
+  a.is_live = !a.is_live;
+  renderAgents();
+  notify(a.is_live ? `${a.emoji} ${a.name} is now LIVE` : `${a.emoji} ${a.name} paused`);
 }
 
 function testAgent(id) {
@@ -829,223 +582,129 @@ function testAgent(id) {
   loadChat(activeChatAgent);
 }
 
-function copyEmbed(id) {
-  notify('🔗 Embed code copied to clipboard!');
-}
-
-// ===== CHAT =====
+// ===== CHAT (routed through backend, no customer API key) =====
 function renderChatAgents() {
   const list = document.getElementById('chatAgentList');
+  if (agents.length === 0) { list.innerHTML = `<div class="empty-state">No agents yet.</div>`; return; }
   list.innerHTML = agents.map(a => `
-    <div class="ca-item ${activeChatAgent && activeChatAgent.id === a.id ? 'active' : ''}" onclick="loadChat(agents.find(x=>x.id==='${a.id}'))">
+    <div class="ca-item ${activeChatAgent && activeChatAgent.id === a.id ? 'active' : ''}" onclick='loadChat(${JSON.stringify(a).replace(/'/g, "&apos;")})'>
       <div class="ca-av" style="background:rgba(0,245,160,.1)">${a.emoji}</div>
-      <div>
-        <div class="ca-name">${a.name}</div>
-        <div class="ca-sub">${a.model.includes('sonnet') ? 'Sonnet 4' : 'Haiku 4.5'}</div>
-      </div>
+      <div><div class="ca-name">${a.name}</div><div class="ca-sub">${a.model.includes('sonnet') ? 'Sonnet 4' : 'Haiku 4.5'}</div></div>
     </div>`).join('');
 }
 
 function loadChat(agent) {
   activeChatAgent = agent;
   chatHistory = [];
-  document.querySelectorAll('.ca-item').forEach((el,i) => {
-    el.classList.toggle('active', agents[i] && agents[i].id === agent.id);
-  });
+  renderChatAgents();
   document.getElementById('chatAgentName').textContent = agent.emoji + ' ' + agent.name;
-  document.getElementById('chatAgentModel').textContent = agent.model.includes('sonnet') ? 'Claude Sonnet 4 · Live API' : 'Claude Haiku 4.5 · Live API';
+  document.getElementById('chatAgentModel').textContent = agent.model.includes('sonnet') ? 'Claude Sonnet 4' : 'Claude Haiku 4.5';
   document.getElementById('chatSend').disabled = false;
-  const msgs = document.getElementById('chatMsgs');
-  msgs.innerHTML = `<div class="msg"><div class="msg-av" style="background:rgba(0,245,160,.1)">${agent.emoji}</div><div><div class="msg-bubble">Hi! I'm <strong>${agent.name}</strong>. ${agent.desc} How can I help you today?</div><div class="msg-time">just now</div></div></div>`;
+  document.getElementById('chatMsgs').innerHTML = `<div class="msg"><div class="msg-av" style="background:rgba(0,245,160,.1)">${agent.emoji}</div><div><div class="msg-bubble">Hi! I'm ${agent.name}. ${agent.description || ''} How can I help?</div></div></div>`;
 }
 
-function handleChatKey(e) {
-  if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); }
-}
+function handleChatKey(e) { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); } }
 
 async function sendMessage() {
   if (isSending || !activeChatAgent) return;
   const input = document.getElementById('chatInput');
   const text = input.value.trim();
   if (!text) return;
-
   isSending = true;
   input.value = '';
   document.getElementById('chatSend').disabled = true;
-
   const msgs = document.getElementById('chatMsgs');
-  const now = new Date().toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'});
 
-  // User message
-  msgs.innerHTML += `<div class="msg user"><div class="msg-av" style="background:rgba(0,212,255,.15);color:var(--accent2)">T</div><div><div class="msg-bubble">${escHtml(text)}</div><div class="msg-time">${now}</div></div></div>`;
-  chatHistory.push({ role:'user', content:text });
+  msgs.innerHTML += `<div class="msg user"><div class="msg-bubble">${escHtml(text)}</div></div>`;
   msgs.scrollTop = msgs.scrollHeight;
 
-  // Typing indicator
   const typingId = 'typing-' + Date.now();
-  msgs.innerHTML += `<div class="msg" id="${typingId}"><div class="msg-av" style="background:rgba(0,245,160,.1)">${activeChatAgent.emoji}</div><div><div class="msg-bubble"><div class="typing-dots"><span></span><span></span><span></span></div></div></div></div>`;
+  msgs.innerHTML += `<div class="msg" id="${typingId}"><div class="msg-av" style="background:rgba(0,245,160,.1)">${activeChatAgent.emoji}</div><div class="msg-bubble"><div class="typing-dots"><span></span><span></span><span></span></div></div></div>`;
   msgs.scrollTop = msgs.scrollHeight;
 
   try {
-    const key = apiKey || document.getElementById('apiKeyInput')?.value?.trim() || '';
-    if (!key) {
-      // Demo mode — simulate response
-      await sleep(1200 + Math.random() * 800);
-      const demos = [
-        "Great question! I'd be happy to help you with that. Based on what you've described, I'd recommend starting with the basics and working your way up. Is there anything specific you'd like me to clarify?",
-        "Thanks for reaching out! I understand your concern. Let me walk you through this step by step. First, could you provide a bit more context so I can give you the most accurate answer?",
-        "Absolutely! That's something I can definitely assist with. Here's what I suggest: take a look at the available options and let me know which one aligns best with your needs.",
-        "I appreciate you asking! This is a common question. The short answer is yes — and here's why it works that way in practice..."
-      ];
-      const reply = demos[Math.floor(Math.random() * demos.length)];
-      document.getElementById(typingId)?.remove();
-      msgs.innerHTML += `<div class="msg"><div class="msg-av" style="background:rgba(0,245,160,.1)">${activeChatAgent.emoji}</div><div><div class="msg-bubble">${reply}<br/><br/><span style="font-size:.65rem;color:var(--muted);opacity:.7">[Demo mode — add API key in Settings for live responses]</span></div><div class="msg-time">${new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'})}</div></div></div>`;
-      chatHistory.push({ role:'assistant', content:reply });
-    } else {
-      const res = await fetch('https://api.anthropic.com/v1/messages', {
-        method:'POST',
-        headers:{ 'Content-Type':'application/json', 'x-api-key':key, 'anthropic-version':'2023-06-01' },
-        body: JSON.stringify({
-          model: activeChatAgent.model,
-          max_tokens: 1024,
-          system: activeChatAgent.prompt,
-          messages: chatHistory
-        })
-      });
-      const data = await res.json();
-      document.getElementById(typingId)?.remove();
-      const reply = data.content?.[0]?.text || 'Sorry, I could not generate a response.';
-      msgs.innerHTML += `<div class="msg"><div class="msg-av" style="background:rgba(0,245,160,.1)">${activeChatAgent.emoji}</div><div><div class="msg-bubble">${escHtml(reply)}</div><div class="msg-time">${new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'})}</div></div></div>`;
-      chatHistory.push({ role:'assistant', content:reply });
-    }
-  } catch(e) {
+    const res = await fetch('/api/agent-chat', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${accessToken}` },
+      body: JSON.stringify({ agent_id: activeChatAgent.id, message: text, history: chatHistory }),
+    });
+    const data = await res.json();
     document.getElementById(typingId)?.remove();
-    msgs.innerHTML += `<div class="msg"><div class="msg-av" style="background:rgba(255,79,79,.15)">⚠</div><div><div class="msg-bubble" style="color:var(--red)">Connection error. Check your API key in Settings.</div></div></div>`;
+    if (!res.ok) {
+      msgs.innerHTML += `<div class="msg"><div class="msg-bubble" style="color:var(--red)">${data.error || 'Something went wrong.'}</div></div>`;
+    } else {
+      msgs.innerHTML += `<div class="msg"><div class="msg-av" style="background:rgba(0,245,160,.1)">${activeChatAgent.emoji}</div><div class="msg-bubble">${escHtml(data.reply)}</div></div>`;
+      chatHistory.push({ role: 'user', content: text }, { role: 'assistant', content: data.reply });
+    }
+  } catch (e) {
+    document.getElementById(typingId)?.remove();
+    msgs.innerHTML += `<div class="msg"><div class="msg-bubble" style="color:var(--red)">Connection error. Try again.</div></div>`;
   }
-
   msgs.scrollTop = msgs.scrollHeight;
   isSending = false;
   document.getElementById('chatSend').disabled = false;
-  document.getElementById('chatInput').focus();
 }
 
 // ===== ANALYTICS =====
-function renderAnalytics() {
-  const days14 = ['1','2','3','4','5','6','7','8','9','10','11','12','13','14'];
-  const vals = [120,95,180,220,175,310,290,195,340,420,380,290,460,410];
-  const max = Math.max(...vals);
-  const chart = document.getElementById('analyticsChart');
-  chart.innerHTML = days14.map((d,i) => `
-    <div class="bar-wrap">
-      <div class="bar-val" style="font-size:.58rem">${vals[i]}</div>
-      <div class="bar" style="height:${(vals[i]/max)*100}%"></div>
-      <div class="bar-label">${d}</div>
-    </div>`).join('');
-
-  document.getElementById('topAgents').innerHTML = agents.map(a => `
-    <div style="margin-bottom:14px">
-      <div style="display:flex;justify-content:space-between;font-size:.78rem;margin-bottom:6px">
-        <span>${a.emoji} ${a.name}</span>
-        <span style="color:var(--accent);font-family:'Syne',sans-serif;font-weight:700">${a.msgs}</span>
-      </div>
-      <div class="progress-bar"><div class="progress-fill" style="width:${(a.msgs/1240)*100}%"></div></div>
-    </div>`).join('');
-
-  const latencies = [['< 1s','38%',38],['1–2s','45%',45],['2–3s','12%',12],['> 3s','5%',5]];
-  document.getElementById('latencyDist').innerHTML = latencies.map(l => `
-    <div style="margin-bottom:14px">
-      <div style="display:flex;justify-content:space-between;font-size:.78rem;margin-bottom:6px">
-        <span>${l[0]}</span><span style="color:var(--accent2)">${l[1]}</span>
-      </div>
-      <div class="progress-bar"><div class="progress-fill" style="width:${l[2]}%;background:linear-gradient(90deg,var(--accent2),var(--accent))"></div></div>
-    </div>`).join('');
+async function renderAnalytics() {
+  const usage = await getUsageStats();
+  const limit = PLAN_LIMITS[currentUser.plan] ?? PLAN_LIMITS.free;
+  const pct = Math.min(100, (usage.total / limit) * 100);
+  document.getElementById('analyticsSummary').innerHTML = `
+    <div style="font-size:.85rem;margin-bottom:10px">${usage.total.toLocaleString()} of ${limit.toLocaleString()} messages used this month</div>
+    <div class="progress-bar" style="height:6px;background:var(--border2);border-radius:3px;overflow:hidden">
+      <div style="height:100%;width:${pct}%;background:linear-gradient(90deg,var(--accent),var(--accent2))"></div>
+    </div>`;
 }
 
-// ===== EMBED LINKS =====
+// ===== EMBED =====
 function renderEmbedLinks() {
   const el = document.getElementById('embedLinks');
-  el.innerHTML = agents.filter(a => a.live).map(a => `
+  el.innerHTML = agents.length === 0 ? `<div class="empty-state">No agents yet.</div>` : agents.map(a => `
     <div style="display:flex;align-items:center;gap:12px;padding:12px;background:var(--bg);border:1px solid var(--border2);border-radius:8px;margin-bottom:8px">
-      <span style="font-size:1.1rem">${a.emoji}</span>
-      <div style="flex:1">
-        <div style="font-family:'Syne',sans-serif;font-weight:600;font-size:.82rem">${a.name}</div>
-        <div style="font-size:.7rem;color:var(--accent2)">https://agenthost.io/a/${a.id}-${a.name.toLowerCase().replace(/ /g,'-')}</div>
-      </div>
-      <button onclick="notify('🔗 URL copied!')" style="background:var(--border2);border:none;color:var(--muted2);font-family:'DM Mono',monospace;font-size:.65rem;padding:6px 12px;border-radius:4px;cursor:pointer">Copy</button>
+      <span>${a.emoji}</span>
+      <div style="flex:1"><div style="font-family:'Syne',sans-serif;font-weight:600;font-size:.82rem">${a.name}</div><div style="font-size:.7rem;color:var(--accent2)">Agent ID: ${a.id}</div></div>
+      <button onclick="navigator.clipboard.writeText('${a.id}');notify('Agent ID copied!')" style="background:var(--border2);border:none;color:var(--muted2);font-size:.65rem;padding:6px 12px;border-radius:4px;cursor:pointer">Copy</button>
     </div>`).join('');
 }
 
-// ===== MODAL =====
-function openModal() {
-  document.getElementById('createModal').classList.add('open');
-  setTimeout(() => document.getElementById('agentName').focus(), 100);
-}
-function closeModal() {
-  document.getElementById('createModal').classList.remove('open');
-}
-function selModel(el, model) {
-  document.querySelectorAll('.model-opt').forEach(o => o.classList.remove('sel'));
-  el.classList.add('sel');
-  selectedModel = model;
-}
+// ===== MODAL / DEPLOY =====
+function openModal() { document.getElementById('createModal').classList.add('open'); setTimeout(() => document.getElementById('agentName').focus(), 100); }
+function closeModal() { document.getElementById('createModal').classList.remove('open'); }
+function selModel(el, model) { document.querySelectorAll('.model-opt').forEach(o => o.classList.remove('sel')); el.classList.add('sel'); selectedModel = model; }
 
 async function deployAgent() {
   const name = document.getElementById('agentName').value.trim();
   const emoji = document.getElementById('agentEmoji').value.trim() || '🤖';
-  const desc = document.getElementById('agentDesc').value.trim();
-  const prompt = document.getElementById('agentPrompt').value.trim();
+  const description = document.getElementById('agentDesc').value.trim();
+  const system_prompt = document.getElementById('agentPrompt').value.trim() || 'You are a helpful assistant.';
   if (!name) { document.getElementById('agentName').focus(); return; }
 
   closeModal();
-  showDeploy(name, emoji);
-
-  const id = 'a' + Date.now();
-  agents.push({ id, name, emoji, desc: desc || 'Custom AI agent', model: selectedModel, prompt: prompt || 'You are a helpful assistant.', live: true, msgs: 0, clients: 0 });
-  document.getElementById('agentCount').textContent = agents.length;
-
-  setTimeout(() => {
-    hideDeploy(name, emoji);
-    renderAgents();
-  }, 3200);
-}
-
-function showDeploy(name, emoji) {
-  const steps = [
-    'Initializing agent environment...',
-    'Connecting to LLM provider...',
-    'Configuring memory & context...',
-    'Setting up webhook endpoints...',
-    'Running health checks...',
-  ];
   const overlay = document.getElementById('deployOverlay');
-  const stepsEl = document.getElementById('deploySteps');
-  const bar = document.getElementById('deployBar');
-  stepsEl.innerHTML = steps.map(s => `<div class="deploy-step"><span class="ds-icon">⏳</span><span class="ds-text">${s}</span></div>`).join('');
   overlay.classList.add('open');
+  document.getElementById('deployBar').style.width = '40%';
 
-  steps.forEach((s, i) => {
-    setTimeout(() => {
-      const items = stepsEl.querySelectorAll('.deploy-step');
-      if (items[i]) {
-        items[i].querySelector('.ds-icon').textContent = '✅';
-        items[i].querySelector('.ds-text').className = 'ds-text done';
-      }
-      bar.style.width = ((i+1)/steps.length * 100) + '%';
-    }, i * 580);
-  });
+  const { data, error } = await supabaseClient.from('agents').insert({
+    user_id: currentUser.id, name, emoji, description, system_prompt, model: selectedModel, is_live: true
+  }).select().single();
+
+  document.getElementById('deployBar').style.width = '100%';
+  setTimeout(async () => {
+    overlay.classList.remove('open');
+    document.getElementById('deployBar').style.width = '0%';
+    if (error) { notify('⚠ Could not create agent'); console.error(error); return; }
+    agents.unshift(data);
+    document.getElementById('agentCount').textContent = agents.length;
+    notify(`${emoji} ${name} deployed successfully!`);
+    nav('agents', document.querySelectorAll('.sb-item')[1]);
+  }, 500);
 }
 
-function hideDeploy(name, emoji) {
-  document.getElementById('deployOverlay').classList.remove('open');
-  document.getElementById('deployBar').style.width = '0%';
-  notify(`${emoji} ${name} deployed successfully!`);
-  nav('agents', document.querySelectorAll('.sb-item')[1]);
-}
-
-// ===== SETTINGS =====
-function saveSettings() {
-  apiKey = document.getElementById('apiKeyInput').value.trim();
-  notify('✅ Settings saved! API key active.');
+// ===== ACCOUNT =====
+async function signOut() {
+  await supabaseClient.auth.signOut();
+  window.location.href = '/agenthost-auth.html';
 }
 
 // ===== HELPERS =====
@@ -1055,18 +714,7 @@ function notify(msg) {
   n.classList.add('show');
   setTimeout(() => n.classList.remove('show'), 3200);
 }
-function copyCode(btn, id) {
-  const text = document.getElementById(id).innerText;
-  navigator.clipboard.writeText(text).then(() => { btn.textContent = 'Copied!'; setTimeout(() => btn.textContent = 'Copy', 2000); });
-}
-function escHtml(s) {
-  return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\n/g,'<br>');
-}
-function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
-
-// ===== INIT =====
-renderOverview();
-renderAgents();
+function escHtml(s) { return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\n/g,'<br>'); }
 </script>
 </body>
 </html>
