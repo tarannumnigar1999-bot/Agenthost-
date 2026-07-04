@@ -1,37 +1,6 @@
 {
-  "version": 2,
-  "name": "agenthost",
-  "builds": [
-    {
-      "src": "api/**/*.js",
-      "use": "@vercel/node"
-    },
-    {
-      "src": "*.html",
-      "use": "@vercel/static"
-    }
-  ],
-  "routes": [
-    {
-      "src": "/api/(.*)",
-      "dest": "/api/$1"
-    },
-    {
-      "src": "/dashboard",
-      "dest": "/agenthost-dashboard.html"
-    },
-    {
-      "src": "/",
-      "dest": "/agenthost-landing.html"
-    }
-  ],
-  "headers": [
-    {
-      "source": "/api/(.*)",
-      "headers": [
-        { "key": "Access-Control-Allow-Origin", "value": "*" },
-        { "key": "Access-Control-Allow-Methods", "value": "GET,POST,PUT,DELETE,OPTIONS" }
-      ]
-    }
+  "rewrites": [
+    { "source": "/dashboard", "destination": "/agenthost-dashboard-1.html" },
+    { "source": "/", "destination": "/agenthost-landing.html" }
   ]
 }
