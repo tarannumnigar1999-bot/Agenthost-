@@ -196,8 +196,8 @@ body{background:var(--bg);color:var(--text);font-family:'DM Mono',monospace;disp
 
 <script>
   // ===== AUTH + TRIAL GATE — runs before anything renders =====
-  const SUPABASE_URL = "YOUR_SUPABASE_URL";
-  const SUPABASE_ANON_KEY = "YOUR_SUPABASE_ANON_KEY";
+  const SUPABASE_URL = "https://cdhkzvpwmkcbxrvqujhb.supabase.co";
+  const SUPABASE_ANON_KEY = "sb_publishable_mScm4_dfvFTqNiBctoljKA_V9uFdhU6";
   const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
   let currentUser = null;
   let accessToken = null;
@@ -230,10 +230,10 @@ body{background:var(--bg);color:var(--text);font-family:'DM Mono',monospace;disp
     document.body.innerHTML = `
       <div class="upgrade-screen">
         <div style="max-width:420px">
-          <div style="font-size:2rem;margin-bottom:16px;font-family:'Syne',sans-serif;font-weight:800">Your free trial has ended</div>
-          <p style="color:#6a7490;margin-bottom:28px;line-height:1.6">Your 14-day trial for ${email} is over. Pick a plan to keep your agents live.</p>
-          <a href="https://rzp.io/l/agenthost-pro" style="display:inline-block;background:#00f5a0;color:#000;padding:12px 28px;border-radius:6px;text-decoration:none;font-weight:700;margin:0 8px 12px;font-family:'Syne',sans-serif">Upgrade to Pro — $49/mo</a><br/>
-          <a href="https://rzp.io/l/agenthost-agency" style="display:inline-block;background:transparent;color:#00f5a0;border:1px solid #00f5a0;padding:12px 28px;border-radius:6px;text-decoration:none;font-weight:700;margin:0 8px;font-family:'Syne',sans-serif">Upgrade to Agency — $99/mo</a>
+          <div style="font-size:2rem;margin-bottom:16px;font-family:'Syne',sans-serif;font-weight:800">Your subscription needs attention</div>
+          <p style="color:#6a7490;margin-bottom:28px;line-height:1.6">There's an issue with the plan for ${email}. Pick a plan below to restore access.</p>
+          <a href="https://rzp.io/rzp/oGEgQ97R" style="display:inline-block;background:#00f5a0;color:#000;padding:12px 28px;border-radius:6px;text-decoration:none;font-weight:700;margin:0 8px 12px;font-family:'Syne',sans-serif">Upgrade to Pro — $49/mo</a><br/>
+          <a href="https://rzp.io/rzp/QjbmB3vr" style="display:inline-block;background:transparent;color:#00f5a0;border:1px solid #00f5a0;padding:12px 28px;border-radius:6px;text-decoration:none;font-weight:700;margin:0 8px;font-family:'Syne',sans-serif">Upgrade to Agency — $99/mo</a>
         </div>
       </div>`;
   }
@@ -734,3 +734,4 @@ function escHtml(s) { return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replac
 </script>
 </body>
 </html>
+
