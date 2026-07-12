@@ -402,6 +402,35 @@ body{background:var(--bg);color:var(--text);font-family:'DM Mono',monospace;disp
   </div>
 </div>
 
+<div class="modal-overlay" id="limitModal">
+  <div class="modal" style="max-width:480px">
+    <div class="modal-head">
+      <div class="modal-title">You've used your free agent</div>
+      <button class="modal-close" onclick="closeLimitModal()">✕</button>
+    </div>
+    <div class="modal-body">
+      <p style="color:var(--muted2);font-size:.85rem;line-height:1.6;margin-bottom:20px">
+        Your Free plan includes 1 agent. Adding a 2nd agent requires upgrading — here's exactly what each plan unlocks, no hidden steps:
+      </p>
+      <div style="display:flex;flex-direction:column;gap:10px">
+        <a href="https://rzp.io/rzp/K70HPUGR" target="_blank" style="display:flex;justify-content:space-between;align-items:center;padding:14px 16px;background:var(--card);border:1px solid var(--border2);border-radius:10px;text-decoration:none;color:var(--text)">
+          <div><div style="font-family:'Syne',sans-serif;font-weight:700;font-size:.9rem">Starter — $10/mo</div><div style="font-size:.72rem;color:var(--muted2)">5 agents · 1,000 messages/mo</div></div>
+          <span style="color:var(--accent);font-family:'Syne',sans-serif;font-weight:700">→</span>
+        </a>
+        <a href="https://rzp.io/rzp/oGEgQ97R" target="_blank" style="display:flex;justify-content:space-between;align-items:center;padding:14px 16px;background:var(--card);border:1px solid var(--border2);border-radius:10px;text-decoration:none;color:var(--text)">
+          <div><div style="font-family:'Syne',sans-serif;font-weight:700;font-size:.9rem">Pro — $49/mo</div><div style="font-size:.72rem;color:var(--muted2)">10 agents · 6,000 messages/mo</div></div>
+          <span style="color:var(--accent);font-family:'Syne',sans-serif;font-weight:700">→</span>
+        </a>
+        <a href="https://rzp.io/rzp/QjbmB3vr" target="_blank" style="display:flex;justify-content:space-between;align-items:center;padding:14px 16px;background:var(--card);border:1px solid var(--border2);border-radius:10px;text-decoration:none;color:var(--text)">
+          <div><div style="font-family:'Syne',sans-serif;font-weight:700;font-size:.9rem">Agency — $99/mo</div><div style="font-size:.72rem;color:var(--muted2)">Unlimited agents · 12,000 messages/mo</div></div>
+          <span style="color:var(--accent);font-family:'Syne',sans-serif;font-weight:700">→</span>
+        </a>
+      </div>
+      <p style="color:var(--muted);font-size:.7rem;margin-top:16px">After paying, your account updates automatically within a few minutes.</p>
+    </div>
+  </div>
+</div>
+
 <div class="deploy-overlay" id="deployOverlay">
   <div class="deploy-box">
     <div class="deploy-icon">⚡</div>
@@ -420,8 +449,13 @@ let selectedModel = 'claude-sonnet-4-20250514';
 let activeChatAgent = null;
 let chatHistory = [];
 let isSending = false;
-const PLAN_LIMITS = { free: 500, pro: 10000, agency: 100000 };
-const AGENT_LIMITS = { free: 1, pro: 10, agency: Infinity };
+const PLAN_LIMITS = { free: 500, starter: 1000, pro: 6000, agency: 12000 };
+const AGENT_LIMITS = { free: 1, starter: 5, pro: 10, agency: Infinity };
+const UPGRADE_LINKS = {
+  starter: "https://rzp.io/rzp/K70HPUGR",
+  pro: "https://rzp.io/rzp/oGEgQ97R",
+  agency: "https://rzp.io/rzp/QjbmB3vr",
+};
 
 // ===== INIT (called by gate after auth confirmed) =====
 async function initDashboard() {
@@ -673,12 +707,13 @@ function renderEmbedLinks() {
 function openModal() {
   const agentLimit = AGENT_LIMITS[currentUser.plan] ?? AGENT_LIMITS.free;
   if (agents.length >= agentLimit) {
-    notify(`⚠ ${currentUser.plan.charAt(0).toUpperCase() + currentUser.plan.slice(1)} plan limit reached (${agentLimit} agent${agentLimit === 1 ? '' : 's'}). Upgrade for more.`);
+    document.getElementById('limitModal').classList.add('open');
     return;
   }
   document.getElementById('createModal').classList.add('open');
   setTimeout(() => document.getElementById('agentName').focus(), 100);
 }
+function closeLimitModal() { document.getElementById('limitModal').classList.remove('open'); }
 function closeModal() { document.getElementById('createModal').classList.remove('open'); }
 function selModel(el, model) { document.querySelectorAll('.model-opt').forEach(o => o.classList.remove('sel')); el.classList.add('sel'); selectedModel = model; }
 
@@ -686,7 +721,7 @@ async function deployAgent() {
   const agentLimit = AGENT_LIMITS[currentUser.plan] ?? AGENT_LIMITS.free;
   if (agents.length >= agentLimit) {
     closeModal();
-    notify(`⚠ Your ${currentUser.plan} plan allows ${agentLimit} agent${agentLimit === 1 ? '' : 's'}. Upgrade to add more.`);
+    document.getElementById('limitModal').classList.add('open');
     return;
   }
 
