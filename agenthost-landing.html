@@ -4,7 +4,7 @@
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 <title>AgentHost AI — Deploy Your AI Agent in 60 Seconds</title>
-<meta name="description" content="Deploy a fully trained AI chatbot for your business in 60 seconds. No code, no servers. Start a 14-day free trial — white-label and resell to clients on Pro and Agency plans."/>
+<meta name="description" content="Deploy a fully trained AI chatbot for your business in 60 seconds. No code, no servers. Start free with 1 agent — white-label and resell to clients on Pro and Agency plans."/>
 <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Mono:wght@300;400;500&display=swap" rel="stylesheet"/>
 <style>
 :root {
@@ -23,23 +23,17 @@
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
 html{scroll-behavior:smooth;}
 body{background:var(--bg);color:var(--text);font-family:'DM Mono',monospace;overflow-x:hidden;}
-
-/* GRID BG */
 body::before{
   content:'';position:fixed;inset:0;
   background-image:linear-gradient(rgba(0,245,160,.025) 1px,transparent 1px),linear-gradient(90deg,rgba(0,245,160,.025) 1px,transparent 1px);
   background-size:60px 60px;pointer-events:none;z-index:0;
 }
-
-/* SCROLL REVEAL */
 .reveal{opacity:0;transform:translateY(32px);transition:opacity .7s ease,transform .7s ease;}
 .reveal.vis{opacity:1;transform:translateY(0);}
 .reveal.d1{transition-delay:.1s;}
 .reveal.d2{transition-delay:.2s;}
 .reveal.d3{transition-delay:.3s;}
 .reveal.d4{transition-delay:.4s;}
-
-/* NAV */
 nav{
   position:fixed;top:0;left:0;right:0;z-index:100;
   display:flex;align-items:center;justify-content:space-between;
@@ -62,8 +56,6 @@ nav.scrolled{
   border:none;cursor:pointer;transition:all .2s;text-decoration:none;
 }
 .nav-cta:hover{background:#00e090;transform:translateY(-1px);}
-
-/* HERO */
 .hero{
   position:relative;z-index:1;
   min-height:100vh;display:flex;flex-direction:column;
@@ -136,11 +128,7 @@ h1 .blue{color:var(--accent2);}
 }
 .stat-val{font-family:'Syne',sans-serif;font-size:2rem;font-weight:800;color:var(--accent);}
 .stat-label{font-size:.7rem;color:var(--muted2);letter-spacing:.08em;text-transform:uppercase;margin-top:4px;}
-
-/* DIVIDER */
 .divider{width:100%;height:1px;background:linear-gradient(90deg,transparent,var(--border),transparent);position:relative;z-index:1;}
-
-/* TERMINAL */
 .terminal-wrap{position:relative;z-index:1;padding:0 24px 100px;display:flex;justify-content:center;}
 .terminal{
   background:var(--card);border:1px solid var(--border);border-radius:14px;
@@ -156,14 +144,10 @@ h1 .blue{color:var(--accent2);}
 .t-ok{color:var(--accent);}
 .t-url{color:var(--accent2);}
 .t-cursor-blink{display:inline-block;width:8px;height:14px;background:var(--accent);animation:blink 1s infinite;vertical-align:middle;}
-
-/* SECTION COMMON */
 .section{position:relative;z-index:1;padding:100px 48px;max-width:1160px;margin:0 auto;}
 .sec-label{font-size:.72rem;letter-spacing:.14em;text-transform:uppercase;color:var(--accent);margin-bottom:16px;}
 .sec-title{font-family:'Syne',sans-serif;font-size:clamp(1.8rem,4vw,3rem);font-weight:800;letter-spacing:-.02em;line-height:1.1;max-width:600px;margin-bottom:64px;}
 .sec-title span{color:var(--accent);}
-
-/* FEATURES */
 .features-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:16px;}
 .feature-card{
   background:var(--card);border:1px solid var(--border);border-radius:12px;padding:32px;
@@ -175,8 +159,6 @@ h1 .blue{color:var(--accent2);}
 .feature-icon{font-size:1.8rem;margin-bottom:20px;}
 .feature-title{font-family:'Syne',sans-serif;font-weight:700;font-size:1.05rem;margin-bottom:10px;}
 .feature-desc{font-size:.82rem;color:var(--muted2);line-height:1.7;}
-
-/* DEMO */
 .demo-section{padding:100px 48px;border-top:1px solid var(--border);border-bottom:1px solid var(--border);}
 .demo-inner{max-width:1000px;margin:0 auto;}
 .demo-box{
@@ -188,8 +170,6 @@ h1 .blue{color:var(--accent2);}
 .demo-play:hover{background:rgba(0,245,160,.2);transform:scale(1.1);}
 .demo-label{font-family:'Syne',sans-serif;font-weight:600;font-size:1rem;color:var(--muted2);}
 .demo-sub{font-size:.78rem;color:var(--muted);}
-
-/* PRICING */
 .pricing-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:16px;}
 .pricing-card{
   background:var(--card);border:1px solid var(--border);border-radius:14px;padding:40px 32px;
@@ -221,8 +201,6 @@ h1 .blue{color:var(--accent2);}
 .plan-btn:hover{border-color:var(--accent);color:var(--accent);}
 .plan-btn.hot{background:var(--accent);color:#000;border-color:var(--accent);}
 .plan-btn.hot:hover{background:#00e090;box-shadow:0 8px 24px rgba(0,245,160,.3);}
-
-/* TESTIMONIALS */
 .testi-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:16px;}
 .testi-card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:28px;transition:border-color .2s;}
 .testi-card:hover{border-color:var(--border2);}
@@ -232,8 +210,6 @@ h1 .blue{color:var(--accent2);}
 .testi-av{width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:'Syne',sans-serif;font-weight:800;font-size:.85rem;color:#000;}
 .testi-name{font-family:'Syne',sans-serif;font-weight:700;font-size:.88rem;}
 .testi-role{font-size:.7rem;color:var(--muted2);}
-
-/* FAQ */
 .faq-wrap{max-width:800px;margin:0 auto;}
 .faq-item{background:var(--card);border:1px solid var(--border);border-radius:12px;margin-bottom:12px;overflow:hidden;transition:border-color .2s;cursor:pointer;}
 .faq-item.open{border-color:rgba(0,245,160,.25);}
@@ -243,8 +219,6 @@ h1 .blue{color:var(--accent2);}
 .faq-item.open .faq-icon{transform:rotate(45deg);}
 .faq-a{display:none;padding:0 24px 20px;font-size:.85rem;color:var(--muted2);line-height:1.8;}
 .faq-item.open .faq-a{display:block;}
-
-/* CTA */
 .cta-section{position:relative;z-index:1;padding:100px 48px;}
 .cta-inner{
   max-width:800px;margin:0 auto;text-align:center;
@@ -257,8 +231,6 @@ h1 .blue{color:var(--accent2);}
 .cta-title span{color:var(--accent);}
 .cta-sub{color:var(--muted2);font-size:.95rem;margin-bottom:40px;}
 .cta-note{margin-top:20px;font-size:.72rem;color:var(--muted);}
-
-/* FOOTER */
 footer{position:relative;z-index:1;border-top:1px solid var(--border);padding:36px 48px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:16px;}
 .footer-logo{font-family:'Syne',sans-serif;font-weight:800;font-size:1.1rem;}
 .footer-logo span{color:var(--accent);}
@@ -266,13 +238,9 @@ footer{position:relative;z-index:1;border-top:1px solid var(--border);padding:36
 .footer-links a{color:var(--muted);text-decoration:none;font-size:.75rem;letter-spacing:.06em;transition:color .2s;}
 .footer-links a:hover{color:var(--accent);}
 .footer-copy{font-size:.72rem;color:var(--muted);}
-
-/* ANIMATIONS */
 @keyframes fadeUp{from{opacity:0;transform:translateY(24px)}to{opacity:1;transform:translateY(0)}}
 @keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.4;transform:scale(.8)}}
 @keyframes blink{0%,100%{opacity:1}50%{opacity:0}}
-
-/* RESPONSIVE */
 @media(max-width:768px){
   nav{padding:0 20px;}
   .nav-links{display:none;}
@@ -287,7 +255,6 @@ footer{position:relative;z-index:1;border-top:1px solid var(--border);padding:36
 </head>
 <body>
 
-<!-- NAV -->
 <nav id="navbar">
   <div class="nav-logo">Agent<span>Host</span> <sup>AI</sup></div>
   <div class="nav-links">
@@ -297,10 +264,9 @@ footer{position:relative;z-index:1;border-top:1px solid var(--border);padding:36
     <a href="#faq">FAQ</a>
   </div>
   <a href="/agenthost-auth.html#login" style="color:var(--muted2);text-decoration:none;font-size:.8rem;letter-spacing:.06em;transition:color .2s;margin-right:4px;" onmouseover="this.style.color='var(--text)'" onmouseout="this.style.color='var(--muted2)'">Sign In</a>
-  <a href="/agenthost-auth.html" class="nav-cta">Start Free Trial →</a>
+  <a href="/agenthost-auth.html" class="nav-cta">Start Free →</a>
 </nav>
 
-<!-- HERO -->
 <section class="hero">
   <div class="hero-glow"></div>
   <div class="hero-glow2"></div>
@@ -325,7 +291,7 @@ footer{position:relative;z-index:1;border-top:1px solid var(--border);padding:36
   </p>
 
   <div class="hero-btns">
-    <a href="/agenthost-auth.html" class="btn-primary">🚀 Start Free 14-Day Trial</a>
+    <a href="/agenthost-auth.html" class="btn-primary">🚀 Start Free — 1 Agent Included</a>
     <a href="#demo" class="btn-ghost">Book Free Demo →</a>
   </div>
 
@@ -337,7 +303,6 @@ footer{position:relative;z-index:1;border-top:1px solid var(--border);padding:36
   </div>
 </section>
 
-<!-- TERMINAL -->
 <div class="terminal-wrap">
   <div class="terminal reveal">
     <div class="t-header">
@@ -364,7 +329,6 @@ footer{position:relative;z-index:1;border-top:1px solid var(--border);padding:36
 
 <div class="divider"></div>
 
-<!-- FEATURES -->
 <section class="section" id="features">
   <div class="sec-label reveal">Capabilities</div>
   <div class="sec-title reveal d1">Everything you need.<br/><span>Nothing you don't.</span></div>
@@ -404,7 +368,6 @@ footer{position:relative;z-index:1;border-top:1px solid var(--border);padding:36
 
 <div class="divider"></div>
 
-<!-- DEMO -->
 <div class="demo-section" id="demo">
   <div class="demo-inner">
     <div class="reveal" style="text-align:center;margin-bottom:48px">
@@ -422,17 +385,16 @@ footer{position:relative;z-index:1;border-top:1px solid var(--border);padding:36
 
 <div class="divider"></div>
 
-<!-- PRICING -->
 <section class="section" id="pricing">
   <div class="sec-label reveal">Pricing</div>
   <div class="sec-title reveal d1">Transparent pricing.<br/><span>Scale as you grow.</span></div>
-  <div style="color:var(--muted2);font-size:.9rem;margin-bottom:64px;margin-top:-48px" class="reveal d2">14-day free trial. No credit card needed. Upgrade when ready.</div>
+  <div style="color:var(--muted2);font-size:.9rem;margin-bottom:64px;margin-top:-48px" class="reveal d2">1 agent free, forever. $10/month unlocks a 2nd agent.</div>
 
   <div class="pricing-grid">
     <div class="pricing-card reveal d1">
-      <div class="plan-name">Free Trial</div>
-      <div class="plan-price" style="color:var(--accent)">$0<span>/14 days</span></div>
-      <div class="plan-desc">Try AgentHost free for 14 days — no credit card required</div>
+      <div class="plan-name">Free</div>
+      <div class="plan-price" style="color:var(--accent)">$0<span>/forever</span></div>
+      <div class="plan-desc">1 AI agent, free forever. Adding a 2nd agent requires upgrading to Starter ($10/month).</div>
       <ul class="plan-features">
         <li class="yes">1 AI Agent</li>
         <li class="yes">500 messages included</li>
@@ -442,7 +404,7 @@ footer{position:relative;z-index:1;border-top:1px solid var(--border);padding:36
         <li class="no">White-label branding</li>
         <li class="no">Custom domain</li>
       </ul>
-      <a href="/agenthost-auth.html" class="plan-btn" style="border-color:var(--accent);color:var(--accent)">Start Free Trial →</a>
+      <a href="/agenthost-auth.html" class="plan-btn" style="border-color:var(--accent);color:var(--accent)">Start Free →</a>
     </div>
 
     <div class="pricing-card hot reveal d2">
@@ -452,7 +414,7 @@ footer{position:relative;z-index:1;border-top:1px solid var(--border);padding:36
       <div class="plan-desc">For freelancers building recurring revenue</div>
       <ul class="plan-features">
         <li class="yes">10 AI Agents</li>
-        <li class="yes">10,000 messages/month</li>
+        <li class="yes">6,000 messages/month</li>
         <li class="yes">Full analytics</li>
         <li class="yes">Custom domain</li>
         <li class="yes">White-label branding</li>
@@ -468,7 +430,7 @@ footer{position:relative;z-index:1;border-top:1px solid var(--border);padding:36
       <div class="plan-desc">For agencies managing multiple clients</div>
       <ul class="plan-features">
         <li class="yes">Unlimited agents</li>
-        <li class="yes">100,000 messages/month</li>
+        <li class="yes">12,000 messages/month</li>
         <li class="yes">Full analytics + export</li>
         <li class="yes">White-label + custom domain</li>
         <li class="yes">Client management portal</li>
@@ -482,25 +444,23 @@ footer{position:relative;z-index:1;border-top:1px solid var(--border);padding:36
 
 <div class="divider"></div>
 
-<!-- TESTIMONIALS -->
 <section class="section">
   <div class="sec-label reveal">Social Proof</div>
   <div class="sec-title reveal d1">Be among the<br/><span>first to try it.</span></div>
   <div style="text-align:center;max-width:600px;margin:0 auto;padding:40px 20px;">
     <p style="font-size:.95rem;color:var(--muted2);line-height:1.8;margin-bottom:32px;">
       AgentHost just launched. We're onboarding our first users now — 
-      join the free trial and share your experience. 
+      start free with 1 agent and share your experience. 
       Early users get priority support and direct access to the founder.
     </p>
     <a href="/agenthost-auth.html" class="plan-btn hot" style="display:inline-block;text-decoration:none;">
-      Start Free Trial — 14 Days →
+      Start Free →
     </a>
   </div>
 </section>
 
 <div class="divider"></div>
 
-<!-- FAQ -->
 <section class="section" id="faq">
   <div class="faq-wrap">
     <div class="sec-label reveal">FAQ</div>
@@ -509,20 +469,18 @@ footer{position:relative;z-index:1;border-top:1px solid var(--border);padding:36
   </div>
 </section>
 
-<!-- CTA -->
 <div class="cta-section">
   <div class="cta-inner reveal">
     <div class="cta-title">Your agent is waiting<br/><span>to be deployed.</span></div>
-   <div class="cta-sub">14-day free trial · No credit card required · Live in 60 seconds</div>
+    <div class="cta-sub">1 agent free, forever · No credit card required · Live in 60 seconds</div>
     <div class="hero-btns" style="justify-content:center">
-      <a href="/agenthost-auth.html" class="btn-primary">🚀 Start Free Trial — 14 Days</a>
+      <a href="/agenthost-auth.html" class="btn-primary">🚀 Start Free — 1 Agent Included</a>
       <a href="mailto:tarannumnigar1999@gmail.com?subject=AgentHost Inquiry" class="btn-ghost">Contact Sales</a>
     </div>
-    <div class="cta-note">14-day free trial · No credit card · Upgrade anytime · Built in India 🇮🇳</div>
+    <div class="cta-note">1 agent free, forever · No credit card · $10/month unlocks a 2nd agent · Built in India 🇮🇳</div>
   </div>
 </div>
 
-<!-- FOOTER -->
 <footer>
   <div class="footer-logo">Agent<span>Host</span> AI</div>
   <div class="footer-links">
@@ -534,12 +492,10 @@ footer{position:relative;z-index:1;border-top:1px solid var(--border);padding:36
 </footer>
 
 <script>
-// NAV SCROLL
 window.addEventListener('scroll', () => {
   document.getElementById('navbar').classList.toggle('scrolled', window.scrollY > 20);
 });
 
-// TYPEWRITER
 const phrases = ['Gyms & Fitness Studios','Clinics & Doctors','Law Firms','Restaurants','E-commerce Stores','Coaching Centers','Salons & Spas'];
 let pi = 0, ci = 0, del = false;
 const tw = document.getElementById('typewriter');
@@ -558,18 +514,17 @@ function type() {
 }
 type();
 
-// SCROLL REVEAL
 const obs = new IntersectionObserver(entries => {
   entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('vis'); });
 }, { threshold: 0.08 });
 document.querySelectorAll('.reveal').forEach(el => obs.observe(el));
 
-// FAQ
 const faqs = [
   { q: 'How does the AI chatbot actually work?', a: 'You write a system prompt describing your business — pricing, services, FAQs. The AI (powered by Claude, one of the world\'s most advanced models) uses this to answer customer questions intelligently and accurately, 24/7.' },
   { q: 'Do I need any coding knowledge?', a: 'Zero. You configure your agent using a simple form. We give you one line of code to paste into your website. That\'s the only "technical" step, and it takes 30 seconds.' },
   { q: 'Can I white-label this and resell to clients?', a: 'Yes — this is exactly what Pro and Agency plans are built for. Remove AgentHost branding completely, use your own logo and domain, and charge clients whatever you want. Many users charge $100–500/month per client.' },
   { q: 'What languages does the AI support?', a: 'The AI supports 100+ languages natively including Hindi, Bengali, Tamil, Telugu, and all major Indian languages — as well as English, Spanish, French, Arabic, and more.' },
+  { q: 'Is the free plan really free forever?', a: 'Yes — 1 AI agent is free forever, no credit card, no time limit. If you need a 2nd agent, that requires upgrading to Starter ($10/month), which also raises your monthly message limit.' },
   { q: 'What happens if I exceed my message limit?', a: 'We\'ll notify you before you hit the limit. You can upgrade anytime mid-month. We never cut off your chatbot mid-conversation — your customers always get a response.' },
   { q: 'How do I accept payments from clients?', a: 'We\'ve integrated with Razorpay (India) and PayPal (international). You can accept payments in INR, USD, EUR, GBP and 100+ currencies. Money lands in your Indian bank account.' },
 ];
