@@ -30,10 +30,13 @@ body{background:var(--bg);color:var(--text);font-family:'DM Mono',monospace;disp
   width: var(--sidebar-w);
   min-width: var(--sidebar-w);
   height: 100vh;
+  height: 100dvh;
+  max-height: 100dvh;
   background: var(--surface);
   border-right: 1px solid var(--border);
   display: flex;
   flex-direction: column;
+  overflow-y: auto;
   z-index: 10;
 }
 .sb-logo { padding: 24px 20px 20px; border-bottom: 1px solid var(--border); font-family: 'Syne', sans-serif; font-weight: 800; font-size: 1.2rem; letter-spacing: -0.02em; }
@@ -54,7 +57,7 @@ body{background:var(--bg);color:var(--text);font-family:'DM Mono',monospace;disp
 .user-plan { font-size:.62rem;color:var(--accent);letter-spacing:.06em; }
 .signout-btn { background:none;border:none;color:var(--muted);font-size:.65rem;cursor:pointer;margin-top:8px;text-decoration:underline; }
 
-.main { flex: 1; height: 100vh; overflow: hidden; display: flex; flex-direction: column; }
+.main { flex: 1; height: 100vh; height: 100dvh; overflow: hidden; display: flex; flex-direction: column; }
 .topbar { height: 56px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; padding: 0 28px; background: var(--surface); flex-shrink: 0; }
 .page-title { font-family:'Syne',sans-serif;font-weight:700;font-size:1rem; }
 .topbar-right { display:flex;align-items:center;gap:12px; }
@@ -521,7 +524,7 @@ async function renderOverview() {
   const limit = PLAN_LIMITS[currentUser.plan] ?? PLAN_LIMITS.free;
   document.getElementById('statMessages').textContent = usage.total.toLocaleString();
   document.getElementById('statMessagesSub').textContent = `of ${limit.toLocaleString()} this month`;
-  document.getElementById('statPlanSub').textContent = currentUser.subscription_status === 'trial' ? 'Trial active' : '';
+  document.getElementById('statPlanSub').textContent = '';
 
   const actEl = document.getElementById('agentActivity');
   if (agents.length === 0) {
@@ -769,4 +772,3 @@ function escHtml(s) { return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replac
 </script>
 </body>
 </html>
-
