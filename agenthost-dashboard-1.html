@@ -226,6 +226,9 @@ body{background:var(--bg);color:var(--text);font-family:'DM Mono',monospace;disp
     currentUser = { id: session.user.id, ...userRow };
     document.body.style.visibility = "visible";
     initDashboard();
+
+    // Mark active — resets the 30-day inactivity clock just by logging in
+    supabaseClient.from("users").update({ last_active_at: new Date().toISOString() }).eq("id", session.user.id).then(() => {});
   }
 
   function showUpgradeScreen(email) {
