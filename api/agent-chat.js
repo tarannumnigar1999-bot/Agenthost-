@@ -1,109 +1,165 @@
 // api/agent-chat.js
-// Node serverless function. Customers never see or need an Anthropic API key —
-// AgentHost's own key is used here and usage is metered against their plan.
+// Vercel Edge Function — powers the dashboard's Live Test chat.
+// Matches agenthost-dashboard-1.html's actual request format:
+//   POST /api/agent-chat
+//   Headers: Authorization: Bearer <supabase_access_token>
+//   Body: { agent_id, message, history }
+// Response: { reply } on success, { error } on failure.
+
+export const config = { runtime: 'edge' };
 
 const PLAN_LIMITS = {
-  free: 500,
+  free:    500,
   starter: 1000,
-  pro: 6000,
-  agency: 12000,
+  pro:     6000,
+  agency:  12000,
 };
 
-async function supabaseFetch(path, opts = {}) {
-  const res = await fetch(`${process.env.SUPABASE_URL}/rest/v1/${path}`, {
-    ...opts,
-    headers: {
-      apikey: process.env.SUPABASE_SERVICE_ROLE_KEY,
-      Authorization: `Bearer ${process.env.SUPABASE_SERVICE_ROLE_KEY}`,
-      "Content-Type": "application/json",
-      ...(opts.headers || {}),
-    },
-  });
-  return res.json();
+const CORS = {
+  'Access-Control-Allow-Origin':  '*',
+  'Access-Control-Allow-Methods': 'POST, OPTIONS',
+  'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+};
+
+export default async function handler(req) {
+  if (req.method === 'OPTIONS') {
+    return new Response(null, { status: 204, headers: CORS });
+  }
+  if (req.method !== 'POST') {
+    return json({ error: 'Method not allowed' }, 405);
+  }
+
+  try {
+    // 1. Auth — token comes from the Authorization header, not the body
+    const token = req.headers.get('Authorization')?.replace('Bearer ', '');
+    if (!token) return json({ error: 'Unauthorized. Please log in.' }, 401);
+
+    const userRes = await fetch(`${process.env.SUPABASE_URL}/auth/v1/user`, {
+      headers: { 'Authorization': `Bearer ${token}`, 'apikey': process.env.SUPABASE_ANON_KEY },
+    });
+    if (!userRes.ok) return json({ error: 'Invalid or expired session. Please log in again.' }, 401);
+    const authUser = await userRes.json();
+
+    // 2. Get plan from users table
+    const planRes = await supabaseQuery(`users?id=eq.${authUser.id}&select=plan`, process.env.SUPABASE_SERVICE_ROLE_KEY);
+    const planData = await planRes.json();
+    const plan = planData?.[0]?.plan || 'free';
+
+    // 3. Parse body
+    const body = await req.json();
+    const { agent_id, message, history } = body;
+    if (!agent_id || !message) {
+      return json({ error: 'agent_id and message are required' }, 400);
+    }
+
+    // 4. Check usage limit (count 'assistant' rows this month, matching dashboard's own query)
+    const monthStart = new Date();
+    monthStart.setDate(1);
+    monthStart.setHours(0, 0, 0, 0);
+    const usageRes = await supabaseQuery(
+      `usage_logs?user_id=eq.${authUser.id}&role=eq.assistant&created_at=gte.${monthStart.toISOString()}&select=id`,
+      process.env.SUPABASE_SERVICE_ROLE_KEY
+    );
+    const usageData = await usageRes.json();
+    const usageCount = Array.isArray(usageData) ? usageData.length : 0;
+    const limit = PLAN_LIMITS[plan] || PLAN_LIMITS.free;
+    if (usageCount >= limit) {
+      return json({ error: `Monthly limit reached (${limit} messages). Please upgrade your plan.` }, 429);
+    }
+
+    // 5. Fetch the agent (must belong to this user) — filtered in the query itself
+    const agentRes = await supabaseQuery(
+      `agents?id=eq.${agent_id}&user_id=eq.${authUser.id}&select=*`,
+      process.env.SUPABASE_SERVICE_ROLE_KEY
+    );
+    const agentData = await agentRes.json();
+    const agent = agentData?.[0];
+    if (!agent) return json({ error: 'Agent not found or access denied' }, 404);
+
+    // 6. Build message list (prior history + new message)
+    const messages = [
+      ...(Array.isArray(history) ? history : []),
+      { role: 'user', content: message },
+    ];
+
+    // 7. Call Anthropic
+    const anthropicRes = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'Content-Type':      'application/json',
+        'x-api-key':         process.env.ANTHROPIC_API_KEY,
+        'anthropic-version': '2023-06-01',
+      },
+      body: JSON.stringify({
+        model:      agent.model || 'claude-sonnet-4-20250514',
+        max_tokens: 1024,
+        system:     agent.system_prompt || 'You are a helpful assistant.',
+        messages,
+      }),
+    });
+
+    if (!anthropicRes.ok) {
+      const err = await anthropicRes.json().catch(() => ({}));
+      console.error('Anthropic error:', err);
+      return json({ error: 'AI provider error. Please try again.' }, 502);
+    }
+
+    const aiData = await anthropicRes.json();
+    const reply  = aiData.content?.[0]?.text || '';
+
+    // 8. Log usage — TWO rows, matching what the dashboard's Analytics/Overview pages read
+    logExchange(authUser.id, agent_id, message, reply).catch(e => console.error('Log error:', e));
+
+    // 9. Mark this account as active (resets the 30-day inactivity clock)
+    bumpLastActive(authUser.id).catch(e => console.error('Activity bump error:', e));
+
+    // 10. Response — matches what sendMessage() in the dashboard expects
+    return json({ reply });
+
+  } catch (err) {
+    console.error('agent-chat error:', err);
+    return json({ error: 'Internal server error' }, 500);
+  }
 }
 
-async function verifyUser(accessToken) {
-  const res = await fetch(`${process.env.SUPABASE_URL}/auth/v1/user`, {
+async function logExchange(userId, agentId, userMsg, aiReply) {
+  const now = new Date().toISOString();
+  await fetch(`${process.env.SUPABASE_URL}/rest/v1/usage_logs`, {
+    method: 'POST',
     headers: {
-      apikey: process.env.SUPABASE_ANON_KEY,
-      Authorization: `Bearer ${accessToken}`,
+      'Content-Type':  'application/json',
+      'apikey':        process.env.SUPABASE_SERVICE_ROLE_KEY,
+      'Authorization': `Bearer ${process.env.SUPABASE_SERVICE_ROLE_KEY}`,
     },
+    body: JSON.stringify([
+      { user_id: userId, agent_id: agentId, role: 'user',      content: userMsg.slice(0, 2000), created_at: now },
+      { user_id: userId, agent_id: agentId, role: 'assistant', content: aiReply.slice(0, 2000), created_at: now },
+    ]),
   });
-  if (!res.ok) return null;
-  return res.json();
 }
 
-export default async function handler(req, res) {
-  if (req.method !== "POST") return res.status(405).json({ error: "Method not allowed" });
-
-  const { agent_id, message, session_id, history } = req.body;
-  const accessToken = (req.headers.authorization || "").replace("Bearer ", "");
-
-  const user = await verifyUser(accessToken);
-  if (!user) return res.status(401).json({ error: "Not signed in" });
-
-  // Load the agent and confirm it belongs to this user
-  const agents = await supabaseFetch(`agents?id=eq.${agent_id}&select=*`);
-  const agent = agents[0];
-  if (!agent || agent.user_id !== user.id) {
-    return res.status(403).json({ error: "Agent not found" });
-  }
-
-  // Load plan + this month's usage
-  const users = await supabaseFetch(`users?id=eq.${user.id}&select=plan,subscription_status`);
-  const account = users[0];
-  if (!account || account.subscription_status === "expired") {
-    return res.status(402).json({ error: "Trial expired — upgrade to keep chatting." });
-  }
-
-  const monthStart = new Date();
-  monthStart.setDate(1);
-  monthStart.setHours(0, 0, 0, 0);
-
-  const usageThisMonth = await supabaseFetch(
-    `usage_logs?user_id=eq.${user.id}&role=eq.assistant&created_at=gte.${monthStart.toISOString()}&select=id`
-  );
-  const limit = PLAN_LIMITS[account.plan] ?? PLAN_LIMITS.free;
-  if (usageThisMonth.length >= limit) {
-    return res.status(402).json({ error: `Monthly limit of ${limit} messages reached. Upgrade for more.` });
-  }
-
-  // Log the user's message
-  await supabaseFetch("usage_logs", {
-    method: "POST",
-    body: JSON.stringify({ user_id: user.id, agent_id, role: "user", content: message }),
-  });
-
-  // Mark this account as active (resets the 30-day inactivity clock)
-  await supabaseFetch(`users?id=eq.${user.id}`, {
-    method: "PATCH",
-    headers: { Prefer: "return=minimal" },
+async function bumpLastActive(userId) {
+  await fetch(`${process.env.SUPABASE_URL}/rest/v1/users?id=eq.${userId}`, {
+    method: 'PATCH',
+    headers: {
+      'Content-Type':  'application/json',
+      'apikey':        process.env.SUPABASE_SERVICE_ROLE_KEY,
+      'Authorization': `Bearer ${process.env.SUPABASE_SERVICE_ROLE_KEY}`,
+      'Prefer':        'return=minimal',
+    },
     body: JSON.stringify({ last_active_at: new Date().toISOString() }),
   });
+}
 
-  // Call Claude with AgentHost's own key
-  const claudeRes = await fetch("https://api.anthropic.com/v1/messages", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      "x-api-key": process.env.ANTHROPIC_API_KEY,
-      "anthropic-version": "2023-06-01",
-    },
-    body: JSON.stringify({
-      model: agent.model,
-      max_tokens: 1024,
-      system: agent.system_prompt,
-      messages: [...(history || []), { role: "user", content: message }],
-    }),
+function supabaseQuery(path, key) {
+  return fetch(`${process.env.SUPABASE_URL}/rest/v1/${path}`, {
+    headers: { 'apikey': key, 'Authorization': `Bearer ${key}` },
   });
-  const data = await claudeRes.json();
-  const reply = data.content?.[0]?.text || "Sorry, I couldn't generate a response.";
+}
 
-  // Log the assistant's reply
-  await supabaseFetch("usage_logs", {
-    method: "POST",
-    body: JSON.stringify({ user_id: user.id, agent_id, role: "assistant", content: reply }),
+function json(data, status = 200) {
+  return new Response(JSON.stringify(data), {
+    status,
+    headers: { ...CORS, 'Content-Type': 'application/json' },
   });
-
-  return res.status(200).json({ reply });
 }
