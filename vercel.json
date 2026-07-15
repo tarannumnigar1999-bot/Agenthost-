@@ -1,4 +1,8 @@
 {
+  "rewrites": [
+    { "source": "/dashboard", "destination": "/agenthost-dashboard-1.html" },
+    { "source": "/", "destination": "/agenthost-landing.html" }
+  ],
   "crons": [
     {
       "path": "/api/cron/pause-inactive-free",
