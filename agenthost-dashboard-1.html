@@ -527,7 +527,7 @@ async function renderOverview() {
   const limit = PLAN_LIMITS[currentUser.plan] ?? PLAN_LIMITS.free;
   document.getElementById('statMessages').textContent = usage.total.toLocaleString();
   document.getElementById('statMessagesSub').textContent = `of ${limit.toLocaleString()} this month`;
-  document.getElementById('statPlanSub').textContent = '';
+  document.getElementById('statPlanSub').textContent = currentUser.plan === 'free' ? '1 agent, free forever' : '';
 
   const actEl = document.getElementById('agentActivity');
   if (agents.length === 0) {
