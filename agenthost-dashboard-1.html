@@ -4,8 +4,8 @@
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 <title>AgentHost Dashboard</title>
-<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Mono:wght@300;400;500&display=swap" rel="stylesheet"/>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<link href="https://googleapis.com" rel="stylesheet"/>
+<script src="https://jsdelivr.net"></script>
 <style>
 :root {
   --bg: #07090d;
@@ -169,7 +169,7 @@ body{background:var(--bg);color:var(--text);font-family:'DM Mono',monospace;disp
 .code-block { background:var(--bg);border:1px solid var(--border2);border-radius:8px; padding:16px;font-size:.78rem;line-height:1.8; color:var(--accent2);overflow-x:auto;position:relative; }
 .code-copy { position:absolute;top:10px;right:10px;background:var(--border2);border:none;color:var(--muted2);font-family:'DM Mono',monospace;font-size:.65rem;padding:4px 10px;border-radius:4px;cursor:pointer;transition:all .2s; }
 .code-copy:hover { background:var(--accent);color:#000; }
-.code-red { color: #ff7070; }
+.code-red { border-color: var(--red) !important; color: var(--red) !important; background: rgba(255, 79, 79, 0.05) !important; }
 .code-green { color: var(--accent); }
 .code-yellow { color: var(--warn); }
 .deploy-overlay { position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:2000;display:none;align-items:center;justify-content:center;backdrop-filter:blur(8px); }
@@ -195,11 +195,9 @@ body{background:var(--bg);color:var(--text);font-family:'DM Mono',monospace;disp
 @media(max-width:900px){ .stats-row{grid-template-columns:repeat(2,1fr);} .chat-layout{grid-template-columns:1fr;} .chat-agents{display:none;} }
 </style>
 </head>
-<body>
-
+<body>         
 <script>
-  // ===== AUTH + TRIAL GATE — runs before anything renders =====
-  const SUPABASE_URL = "https://cdhkzvpwmkcbxrvqujhb.supabase.co";
+  const SUPABASE_URL = "https://supabase.co";
   const SUPABASE_ANON_KEY = "sb_publishable_mScm4_dfvFTqNiBctoljKA_V9uFdhU6";
   const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
   let currentUser = null;
@@ -217,17 +215,12 @@ body{background:var(--bg);color:var(--text);font-family:'DM Mono',monospace;disp
       .single();
 
     if (error || !userRow) { window.location.href = "/agenthost-auth.html"; return; }
-
-    // Free plan no longer expires by time. Only an explicitly canceled/expired
-    // paid subscription blocks access now — free users always get in and are
-    // limited by agent count instead (enforced in deployAgent()).
     if (userRow.subscription_status === "expired") { showUpgradeScreen(userRow.email); return; }
 
     currentUser = { id: session.user.id, ...userRow };
     document.body.style.visibility = "visible";
     initDashboard();
 
-    // Mark active — resets the 30-day inactivity clock just by logging in
     supabaseClient.from("users").update({ last_active_at: new Date().toISOString() }).eq("id", session.user.id).then(() => {});
   }
 
@@ -238,8 +231,8 @@ body{background:var(--bg);color:var(--text);font-family:'DM Mono',monospace;disp
         <div style="max-width:420px">
           <div style="font-size:2rem;margin-bottom:16px;font-family:'Syne',sans-serif;font-weight:800">Your subscription needs attention</div>
           <p style="color:#6a7490;margin-bottom:28px;line-height:1.6">There's an issue with the plan for ${email}. Pick a plan below to restore access.</p>
-          <a href="https://rzp.io/rzp/oGEgQ97R" style="display:inline-block;background:#00f5a0;color:#000;padding:12px 28px;border-radius:6px;text-decoration:none;font-weight:700;margin:0 8px 12px;font-family:'Syne',sans-serif">Upgrade to Pro — $49/mo</a><br/>
-          <a href="https://rzp.io/rzp/QjbmB3vr" style="display:inline-block;background:transparent;color:#00f5a0;border:1px solid #00f5a0;padding:12px 28px;border-radius:6px;text-decoration:none;font-weight:700;margin:0 8px;font-family:'Syne',sans-serif">Upgrade to Agency — $99/mo</a>
+          <a href="https://rzp.io" style="display:inline-block;background:#00f5a0;color:#000;padding:12px 28px;border-radius:6px;text-decoration:none;font-weight:700;margin:0 8px 12px;font-family:'Syne',sans-serif">Upgrade to Pro — $49/mo</a><br/>
+          <a href="https://rzp.io" style="display:inline-block;background:transparent;color:#00f5a0;border:1px solid #00f5a0;padding:12px 28px;border-radius:6px;text-decoration:none;font-weight:700;margin:0 8px;font-family:'Syne',sans-serif">Upgrade to Agency — $99/mo</a>
         </div>
       </div>`;
   }
@@ -281,8 +274,6 @@ body{background:var(--bg);color:var(--text);font-family:'DM Mono',monospace;disp
     <div class="page-title" id="pageTitle">Overview</div>
     <div class="topbar-right"><button class="tb-btn" onclick="openModal()">+ New Agent</button></div>
   </div>
-
-  <div class="content">
 
     <div class="view active" id="view-overview">
       <div class="stats-row">
@@ -337,8 +328,6 @@ body{background:var(--bg);color:var(--text);font-family:'DM Mono',monospace;disp
       </div>
     </div>
 
-    <div class="view" id="view-agents"><div class="agents-grid" id="agentsGrid"></div></div>
-
     <div class="view" id="view-chat">
       <div class="chat-layout">
         <div class="chat-agents">
@@ -378,400 +367,4 @@ body{background:var(--bg);color:var(--text);font-family:'DM Mono',monospace;disp
     </div>
 
     <div class="view" id="view-settings">
-      <div class="embed-card" style="background:var(--card);border:1px solid var(--border);border-radius:12px;padding:28px;max-width:560px">
-        <div class="embed-title" style="font-family:'Syne',sans-serif;font-weight:700;font-size:1rem;margin-bottom:20px">Account Settings</div>
-        <div class="field"><label>Email</label><input type="email" id="settingsEmail" readonly style="opacity:.7" /></div>
-        <div class="field"><label>Current Plan</label><input type="text" id="settingsPlan" readonly style="opacity:.7" /></div>
-        <p style="font-size:.75rem;color:var(--muted2);margin-top:-8px;margin-bottom:16px">To change plans, use the upgrade links shown when your trial ends, or contact support.</p>
-      </div>
-    </div>
 
-  </div>
-</div>
-
-<div class="modal-overlay" id="createModal">
-  <div class="modal">
-    <div class="modal-head"><div class="modal-title">🚀 Create New Agent</div><button class="modal-close" onclick="closeModal()">✕</button></div>
-    <div class="modal-body">
-      <div class="field"><label>Agent Name</label><input type="text" id="agentName" placeholder="e.g. Support Bot, Sales Assistant..." /></div>
-      <div class="field"><label>Emoji Icon</label><input type="text" id="agentEmoji" placeholder="🤖" maxlength="2" value="🤖" /></div>
-      <div class="field"><label>Description</label><input type="text" id="agentDesc" placeholder="What does this agent do?" /></div>
-      <div class="field"><label>System Prompt (Personality & Instructions)</label><textarea id="agentPrompt" rows="4" placeholder="You are a helpful assistant for [business name]. Your job is to..."></textarea></div>
-      <div class="field"><label>AI Model</label>
-        <div class="model-grid">
-          <div class="model-opt sel" onclick="selModel(this,'claude-sonnet-4-20250514')"><div class="model-name">Claude Sonnet 4</div><div class="model-desc">Smart & fast · Recommended</div></div>
-          <div class="model-opt" onclick="selModel(this,'claude-haiku-4-5-20251001')"><div class="model-name">Claude Haiku 4.5</div><div class="model-desc">Ultra-fast · Cost efficient</div></div>
-        </div>
-      </div>
-    </div>
-    <div class="modal-foot"><button class="btn-cancel" onclick="closeModal()">Cancel</button><button class="btn-deploy" onclick="deployAgent()">⚡ Deploy Agent</button></div>
-  </div>
-</div>
-
-<div class="modal-overlay" id="limitModal">
-  <div class="modal" style="max-width:480px">
-    <div class="modal-head">
-      <div class="modal-title">You've used your free agent</div>
-      <button class="modal-close" onclick="closeLimitModal()">✕</button>
-    </div>
-    <div class="modal-body">
-      <p style="color:var(--muted2);font-size:.85rem;line-height:1.6;margin-bottom:20px">
-        Your Free plan includes 1 agent. Adding a 2nd agent requires upgrading — here's exactly what each plan unlocks, no hidden steps:
-      </p>
-      <div style="display:flex;flex-direction:column;gap:10px">
-        <a href="https://rzp.io/rzp/K70HPUGR" target="_blank" style="display:flex;justify-content:space-between;align-items:center;padding:14px 16px;background:var(--card);border:1px solid var(--border2);border-radius:10px;text-decoration:none;color:var(--text)">
-          <div><div style="font-family:'Syne',sans-serif;font-weight:700;font-size:.9rem">Starter — $10/mo</div><div style="font-size:.72rem;color:var(--muted2)">5 agents · 1,000 messages/mo</div></div>
-          <span style="color:var(--accent);font-family:'Syne',sans-serif;font-weight:700">→</span>
-        </a>
-        <a href="https://rzp.io/rzp/oGEgQ97R" target="_blank" style="display:flex;justify-content:space-between;align-items:center;padding:14px 16px;background:var(--card);border:1px solid var(--border2);border-radius:10px;text-decoration:none;color:var(--text)">
-          <div><div style="font-family:'Syne',sans-serif;font-weight:700;font-size:.9rem">Pro — $49/mo</div><div style="font-size:.72rem;color:var(--muted2)">10 agents · 6,000 messages/mo</div></div>
-          <span style="color:var(--accent);font-family:'Syne',sans-serif;font-weight:700">→</span>
-        </a>
-        <a href="https://rzp.io/rzp/QjbmB3vr" target="_blank" style="display:flex;justify-content:space-between;align-items:center;padding:14px 16px;background:var(--card);border:1px solid var(--border2);border-radius:10px;text-decoration:none;color:var(--text)">
-          <div><div style="font-family:'Syne',sans-serif;font-weight:700;font-size:.9rem">Agency — $99/mo</div><div style="font-size:.72rem;color:var(--muted2)">Unlimited agents · 12,000 messages/mo</div></div>
-          <span style="color:var(--accent);font-family:'Syne',sans-serif;font-weight:700">→</span>
-        </a>
-      </div>
-      <p style="color:var(--muted);font-size:.7rem;margin-top:16px">After paying, your account updates automatically within a few minutes.</p>
-    </div>
-  </div>
-</div>
-
-<div class="deploy-overlay" id="deployOverlay">
-  <div class="deploy-box">
-    <div class="deploy-icon">⚡</div>
-    <div class="deploy-title">Deploying Agent...</div>
-    <div class="deploy-sub">Saving your agent to AgentHost</div>
-    <div class="deploy-bar-wrap"><div class="deploy-bar" id="deployBar" style="width:0%"></div></div>
-  </div>
-</div>
-
-<div class="notif" id="notif"><span class="notif-icon" id="notifIcon">✅</span><span class="notif-text" id="notifText">Done!</span></div>
-
-<script>
-// ===== STATE =====
-let agents = [];
-let selectedModel = 'claude-sonnet-4-20250514';
-let activeChatAgent = null;
-let chatHistory = [];
-let isSending = false;
-const PLAN_LIMITS = { free: 500, starter: 1000, pro: 6000, agency: 12000 };
-const AGENT_LIMITS = { free: 1, starter: 5, pro: 10, agency: Infinity };
-const UPGRADE_LINKS = {
-  starter: "https://rzp.io/rzp/K70HPUGR",
-  pro: "https://rzp.io/rzp/oGEgQ97R",
-  agency: "https://rzp.io/rzp/QjbmB3vr",
-};
-
-// ===== INIT (called by gate after auth confirmed) =====
-async function initDashboard() {
-  document.getElementById('sidebarName').textContent = currentUser.email.split('@')[0];
-  document.getElementById('sidebarPlan').textContent = currentUser.plan.toUpperCase() + ' PLAN';
-  document.getElementById('userAvatar').textContent = currentUser.email[0].toUpperCase();
-  document.getElementById('settingsEmail').value = currentUser.email;
-  document.getElementById('settingsPlan').value = currentUser.plan.charAt(0).toUpperCase() + currentUser.plan.slice(1);
-
-  await loadAgents();
-  renderOverview();
-}
-
-async function loadAgents() {
-  const { data, error } = await supabaseClient
-    .from('agents')
-    .select('*')
-    .eq('user_id', currentUser.id)
-    .order('created_at', { ascending: false });
-  if (error) { console.error(error); return; }
-  agents = data || [];
-  document.getElementById('agentCount').textContent = agents.length;
-}
-
-async function getUsageStats() {
-  const monthStart = new Date(); monthStart.setDate(1); monthStart.setHours(0,0,0,0);
-  const { data, error } = await supabaseClient
-    .from('usage_logs')
-    .select('agent_id, role, created_at')
-    .eq('user_id', currentUser.id)
-    .eq('role', 'assistant')
-    .gte('created_at', monthStart.toISOString());
-  if (error) { console.error(error); return { total: 0, byAgent: {} }; }
-  const byAgent = {};
-  (data || []).forEach(r => { byAgent[r.agent_id] = (byAgent[r.agent_id] || 0) + 1; });
-  return { total: (data || []).length, byAgent };
-}
-
-// ===== NAVIGATION =====
-function nav(view, el) {
-  document.querySelectorAll('.sb-item').forEach(i => i.classList.remove('active'));
-  el.classList.add('active');
-  document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
-  document.getElementById('view-' + view).classList.add('active');
-  const titles = { overview:'Overview', agents:'My Agents', chat:'Live Test', analytics:'Analytics', embed:'Embed & Deploy', settings:'Settings' };
-  document.getElementById('pageTitle').textContent = titles[view] || view;
-  if (view === 'agents') renderAgents();
-  if (view === 'chat') renderChatAgents();
-  if (view === 'analytics') renderAnalytics();
-  if (view === 'embed') renderEmbedLinks();
-  if (view === 'overview') renderOverview();
-}
-
-// ===== OVERVIEW =====
-async function renderOverview() {
-  const live = agents.filter(a => a.is_live).length;
-  document.getElementById('statActiveAgents').textContent = live;
-  document.getElementById('statAgentsSub').textContent = `of ${agents.length} total agents`;
-  document.getElementById('statTotalAgents').textContent = agents.length;
-  document.getElementById('statPlan').textContent = currentUser.plan.charAt(0).toUpperCase() + currentUser.plan.slice(1);
-
-  const usage = await getUsageStats();
-  const limit = PLAN_LIMITS[currentUser.plan] ?? PLAN_LIMITS.free;
-  document.getElementById('statMessages').textContent = usage.total.toLocaleString();
-  document.getElementById('statMessagesSub').textContent = `of ${limit.toLocaleString()} this month`;
-  document.getElementById('statPlanSub').textContent = currentUser.plan === 'free' ? '1 agent, free forever' : '';
-
-  const actEl = document.getElementById('agentActivity');
-  if (agents.length === 0) {
-    actEl.innerHTML = `<div class="empty-state">No agents yet — create one to get started.</div>`;
-  } else {
-    const max = Math.max(1, ...agents.map(a => usage.byAgent[a.id] || 0));
-    actEl.innerHTML = agents.map(a => {
-      const count = usage.byAgent[a.id] || 0;
-      return `<div style="margin-bottom:14px">
-        <div style="display:flex;justify-content:space-between;font-size:.78rem;margin-bottom:6px">
-          <span>${a.emoji} ${a.name}</span>
-          <span style="color:var(--accent);font-family:'Syne',sans-serif;font-weight:700">${count}</span>
-        </div>
-        <div class="progress-bar" style="height:4px;background:var(--border2);border-radius:2px;overflow:hidden;margin-top:4px">
-          <div style="height:100%;width:${(count/max)*100}%;background:linear-gradient(90deg,var(--accent),var(--accent2))"></div>
-        </div>
-      </div>`;
-    }).join('');
-  }
-
-  const statusEl = document.getElementById('agentStatusList');
-  statusEl.innerHTML = agents.length === 0
-    ? `<div class="empty-state">No agents yet.</div>`
-    : agents.map(a => `<div style="display:flex;align-items:center;gap:10px;padding:8px 0;font-size:.8rem">
-        <span class="status-dot ${a.is_live ? 'dot-live' : 'dot-off'}"></span>
-        <span>${a.emoji} ${a.name}</span>
-        <span style="margin-left:auto;color:var(--muted2);font-size:.65rem;text-transform:uppercase">${a.is_live ? 'LIVE' : 'PAUSED'}</span>
-      </div>`).join('');
-
-  const { data: recent } = await supabaseClient
-    .from('usage_logs')
-    .select('agent_id, role, content, created_at')
-    .eq('user_id', currentUser.id)
-    .eq('role', 'user')
-    .order('created_at', { ascending: false })
-    .limit(5);
-
-  const convBody = document.getElementById('recentConvs');
-  if (!recent || recent.length === 0) {
-    convBody.innerHTML = `<tr><td colspan="3" class="empty-state">No conversations yet.</td></tr>`;
-  } else {
-    convBody.innerHTML = recent.map(r => {
-      const agent = agents.find(a => a.id === r.agent_id);
-      const time = new Date(r.created_at).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
-      return `<tr>
-        <td style="font-size:.78rem;padding:10px 0;border-bottom:1px solid var(--border);color:var(--text)">${agent ? agent.emoji + ' ' + agent.name : 'Unknown'}</td>
-        <td style="font-size:.78rem;padding:10px 0;border-bottom:1px solid var(--border);color:var(--muted2);max-width:220px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${r.content}</td>
-        <td style="font-size:.78rem;padding:10px 0;border-bottom:1px solid var(--border);color:var(--muted2)">${time}</td>
-      </tr>`;
-    }).join('');
-  }
-}
-
-// ===== AGENTS =====
-function renderAgents() {
-  const grid = document.getElementById('agentsGrid');
-  grid.innerHTML = agents.map(a => `
-    <div class="agent-card">
-      <div class="ac-head">
-        <div class="ac-icon" style="background:rgba(0,245,160,.1)">${a.emoji}</div>
-        <div><div class="ac-name">${a.name}</div><div class="ac-model">${a.model.includes('sonnet') ? 'Claude Sonnet 4' : 'Claude Haiku 4.5'}</div></div>
-        <div class="ac-status" style="color:${a.is_live ? 'var(--accent)' : 'var(--muted)'}">
-          <span class="status-dot ${a.is_live ? 'dot-live' : 'dot-off'}"></span>${a.is_live ? 'LIVE' : 'PAUSED'}
-        </div>
-      </div>
-      <div class="ac-desc">${a.description || 'No description yet.'}</div>
-      <div class="ac-actions">
-        <button class="ac-btn" onclick="testAgent('${a.id}')">💬 Test</button>
-        <button class="ac-btn ${a.is_live ? '' : 'primary'}" onclick="toggleLive('${a.id}')">${a.is_live ? '⏸ Pause' : '▶ Go Live'}</button>
-      </div>
-    </div>`).join('') + `
-    <div class="add-agent-card" onclick="openModal()"><div class="add-icon">+</div><div class="add-label">Create New Agent</div><div class="add-sub">Deploy in seconds</div></div>`;
-}
-
-async function toggleLive(id) {
-  const a = agents.find(x => x.id === id);
-  if (!a) return;
-  const { error } = await supabaseClient.from('agents').update({ is_live: !a.is_live }).eq('id', id).eq('user_id', currentUser.id);
-  if (error) { notify('⚠ Could not update agent'); return; }
-  a.is_live = !a.is_live;
-  renderAgents();
-  notify(a.is_live ? `${a.emoji} ${a.name} is now LIVE` : `${a.emoji} ${a.name} paused`);
-}
-
-function testAgent(id) {
-  activeChatAgent = agents.find(x => x.id === id);
-  document.querySelectorAll('.sb-item').forEach(i => i.classList.remove('active'));
-  document.querySelectorAll('.sb-item')[2].classList.add('active');
-  document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
-  document.getElementById('view-chat').classList.add('active');
-  document.getElementById('pageTitle').textContent = 'Live Test';
-  renderChatAgents();
-  loadChat(activeChatAgent);
-}
-
-// ===== CHAT (routed through backend, no customer API key) =====
-function renderChatAgents() {
-  const list = document.getElementById('chatAgentList');
-  if (agents.length === 0) { list.innerHTML = `<div class="empty-state">No agents yet.</div>`; return; }
-  list.innerHTML = agents.map(a => `
-    <div class="ca-item ${activeChatAgent && activeChatAgent.id === a.id ? 'active' : ''}" onclick='loadChat(${JSON.stringify(a).replace(/'/g, "&apos;")})'>
-      <div class="ca-av" style="background:rgba(0,245,160,.1)">${a.emoji}</div>
-      <div><div class="ca-name">${a.name}</div><div class="ca-sub">${a.model.includes('sonnet') ? 'Sonnet 4' : 'Haiku 4.5'}</div></div>
-    </div>`).join('');
-}
-
-function loadChat(agent) {
-  activeChatAgent = agent;
-  chatHistory = [];
-  renderChatAgents();
-  document.getElementById('chatAgentName').textContent = agent.emoji + ' ' + agent.name;
-  document.getElementById('chatAgentModel').textContent = agent.model.includes('sonnet') ? 'Claude Sonnet 4' : 'Claude Haiku 4.5';
-  document.getElementById('chatSend').disabled = false;
-  document.getElementById('chatMsgs').innerHTML = `<div class="msg"><div class="msg-av" style="background:rgba(0,245,160,.1)">${agent.emoji}</div><div><div class="msg-bubble">Hi! I'm ${agent.name}. ${agent.description || ''} How can I help?</div></div></div>`;
-}
-
-function handleChatKey(e) { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); } }
-
-async function sendMessage() {
-  if (isSending || !activeChatAgent) return;
-  const input = document.getElementById('chatInput');
-  const text = input.value.trim();
-  if (!text) return;
-  isSending = true;
-  input.value = '';
-  document.getElementById('chatSend').disabled = true;
-  const msgs = document.getElementById('chatMsgs');
-
-  msgs.innerHTML += `<div class="msg user"><div class="msg-bubble">${escHtml(text)}</div></div>`;
-  msgs.scrollTop = msgs.scrollHeight;
-
-  const typingId = 'typing-' + Date.now();
-  msgs.innerHTML += `<div class="msg" id="${typingId}"><div class="msg-av" style="background:rgba(0,245,160,.1)">${activeChatAgent.emoji}</div><div class="msg-bubble"><div class="typing-dots"><span></span><span></span><span></span></div></div></div>`;
-  msgs.scrollTop = msgs.scrollHeight;
-
-  try {
-    const res = await fetch('/api/agent-chat', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${accessToken}` },
-      body: JSON.stringify({ agent_id: activeChatAgent.id, message: text, history: chatHistory }),
-    });
-    const data = await res.json();
-    document.getElementById(typingId)?.remove();
-    if (!res.ok) {
-      msgs.innerHTML += `<div class="msg"><div class="msg-bubble" style="color:var(--red)">${data.error || 'Something went wrong.'}</div></div>`;
-    } else {
-      msgs.innerHTML += `<div class="msg"><div class="msg-av" style="background:rgba(0,245,160,.1)">${activeChatAgent.emoji}</div><div class="msg-bubble">${escHtml(data.reply)}</div></div>`;
-      chatHistory.push({ role: 'user', content: text }, { role: 'assistant', content: data.reply });
-    }
-  } catch (e) {
-    document.getElementById(typingId)?.remove();
-    msgs.innerHTML += `<div class="msg"><div class="msg-bubble" style="color:var(--red)">Connection error. Try again.</div></div>`;
-  }
-  msgs.scrollTop = msgs.scrollHeight;
-  isSending = false;
-  document.getElementById('chatSend').disabled = false;
-}
-
-// ===== ANALYTICS =====
-async function renderAnalytics() {
-  const usage = await getUsageStats();
-  const limit = PLAN_LIMITS[currentUser.plan] ?? PLAN_LIMITS.free;
-  const pct = Math.min(100, (usage.total / limit) * 100);
-  document.getElementById('analyticsSummary').innerHTML = `
-    <div style="font-size:.85rem;margin-bottom:10px">${usage.total.toLocaleString()} of ${limit.toLocaleString()} messages used this month</div>
-    <div class="progress-bar" style="height:6px;background:var(--border2);border-radius:3px;overflow:hidden">
-      <div style="height:100%;width:${pct}%;background:linear-gradient(90deg,var(--accent),var(--accent2))"></div>
-    </div>`;
-}
-
-// ===== EMBED =====
-function renderEmbedLinks() {
-  const el = document.getElementById('embedLinks');
-  el.innerHTML = agents.length === 0 ? `<div class="empty-state">No agents yet.</div>` : agents.map(a => `
-    <div style="display:flex;align-items:center;gap:12px;padding:12px;background:var(--bg);border:1px solid var(--border2);border-radius:8px;margin-bottom:8px">
-      <span>${a.emoji}</span>
-      <div style="flex:1"><div style="font-family:'Syne',sans-serif;font-weight:600;font-size:.82rem">${a.name}</div><div style="font-size:.7rem;color:var(--accent2)">Agent ID: ${a.id}</div></div>
-      <button onclick="navigator.clipboard.writeText('${a.id}');notify('Agent ID copied!')" style="background:var(--border2);border:none;color:var(--muted2);font-size:.65rem;padding:6px 12px;border-radius:4px;cursor:pointer">Copy</button>
-    </div>`).join('');
-}
-
-// ===== MODAL / DEPLOY =====
-function openModal() {
-  const agentLimit = AGENT_LIMITS[currentUser.plan] ?? AGENT_LIMITS.free;
-  if (agents.length >= agentLimit) {
-    document.getElementById('limitModal').classList.add('open');
-    return;
-  }
-  document.getElementById('createModal').classList.add('open');
-  setTimeout(() => document.getElementById('agentName').focus(), 100);
-}
-function closeLimitModal() { document.getElementById('limitModal').classList.remove('open'); }
-function closeModal() { document.getElementById('createModal').classList.remove('open'); }
-function selModel(el, model) { document.querySelectorAll('.model-opt').forEach(o => o.classList.remove('sel')); el.classList.add('sel'); selectedModel = model; }
-
-async function deployAgent() {
-  const agentLimit = AGENT_LIMITS[currentUser.plan] ?? AGENT_LIMITS.free;
-  if (agents.length >= agentLimit) {
-    closeModal();
-    document.getElementById('limitModal').classList.add('open');
-    return;
-  }
-
-  const name = document.getElementById('agentName').value.trim();
-  const emoji = document.getElementById('agentEmoji').value.trim() || '🤖';
-  const description = document.getElementById('agentDesc').value.trim();
-  const system_prompt = document.getElementById('agentPrompt').value.trim() || 'You are a helpful assistant.';
-  if (!name) { document.getElementById('agentName').focus(); return; }
-
-  closeModal();
-  const overlay = document.getElementById('deployOverlay');
-  overlay.classList.add('open');
-  document.getElementById('deployBar').style.width = '40%';
-
-  const { data, error } = await supabaseClient.from('agents').insert({
-    user_id: currentUser.id, name, emoji, description, system_prompt, model: selectedModel, is_live: true
-  }).select().single();
-
-  document.getElementById('deployBar').style.width = '100%';
-  setTimeout(async () => {
-    overlay.classList.remove('open');
-    document.getElementById('deployBar').style.width = '0%';
-    if (error) { notify('⚠ Could not create agent'); console.error(error); return; }
-    agents.unshift(data);
-    document.getElementById('agentCount').textContent = agents.length;
-    notify(`${emoji} ${name} deployed successfully!`);
-    nav('agents', document.querySelectorAll('.sb-item')[1]);
-  }, 500);
-}
-
-// ===== ACCOUNT =====
-async function signOut() {
-  await supabaseClient.auth.signOut();
-  window.location.href = '/agenthost-auth.html';
-}
-
-// ===== HELPERS =====
-function notify(msg) {
-  const n = document.getElementById('notif');
-  document.getElementById('notifText').textContent = msg;
-  n.classList.add('show');
-  setTimeout(() => n.classList.remove('show'), 3200);
-}
-function escHtml(s) { return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\n/g,'<br>'); }
-</script>
-</body>
-</html>
