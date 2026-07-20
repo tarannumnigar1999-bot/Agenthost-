@@ -95,8 +95,8 @@ body{background:var(--bg);color:var(--text);font-family:'DM Mono',monospace;disp
 .ac-stats { display:flex;gap:20px; }
 .ac-stat-val { font-family:'Syne',sans-serif;font-weight:700;font-size:1.1rem; }
 .ac-stat-label { font-size:.62rem;color:var(--muted);margin-top:1px; }
-.ac-actions { display:flex;gap:8px;margin-top:16px;padding-top:16px;border-top:1px solid var(--border); }
-.ac-btn { flex:1;padding:8px;border-radius:6px;font-family:'Syne',sans-serif;font-weight:600;font-size:.75rem;border:1px solid var(--border);background:transparent;color:var(--muted2);cursor:pointer;transition:all .2s; }
+.ac-actions { display:flex;gap:8px;margin-top:16px;padding-top:16px;border-top:1px solid var(--border);flex-wrap:wrap; }
+.ac-btn { flex:1;padding:8px;border-radius:6px;font-family:'Syne',sans-serif;font-weight:600;font-size:.75rem;border:1px solid var(--border);background:transparent;color:var(--muted2);cursor:pointer;transition:all .2s;min-width:80px; }
 .ac-btn:hover { border-color:var(--accent);color:var(--accent); }
 .ac-btn.primary { background:var(--accent);color:#000;border-color:var(--accent); }
 .ac-btn.primary:hover { background:#00e090; }
@@ -391,7 +391,7 @@ body{background:var(--bg);color:var(--text);font-family:'DM Mono',monospace;disp
 
 <div class="modal-overlay" id="createModal">
   <div class="modal">
-    <div class="modal-head"><div class="modal-title">🚀 Create New Agent</div><button class="modal-close" onclick="closeModal()">✕</button></div>
+    <div class="modal-head"><div class="modal-title" id="modalTitle">🚀 Create New Agent</div><button class="modal-close" onclick="closeModal()">✕</button></div>
     <div class="modal-body">
       <div class="field"><label>Agent Name</label><input type="text" id="agentName" placeholder="e.g. Support Bot, Sales Assistant..." /></div>
       <div class="field"><label>Emoji Icon</label><input type="text" id="agentEmoji" placeholder="🤖" maxlength="2" value="🤖" /></div>
@@ -399,12 +399,12 @@ body{background:var(--bg);color:var(--text);font-family:'DM Mono',monospace;disp
       <div class="field"><label>System Prompt (Personality & Instructions)</label><textarea id="agentPrompt" rows="4" placeholder="You are a helpful assistant for [business name]. Your job is to..."></textarea></div>
       <div class="field"><label>AI Model</label>
         <div class="model-grid">
-          <div class="model-opt sel" onclick="selModel(this,'claude-sonnet-4-20250514')"><div class="model-name">Claude Sonnet 4</div><div class="model-desc">Smart & fast · Recommended</div></div>
+          <div class="model-opt sel" onclick="selModel(this,'claude-sonnet-4-5')"><div class="model-name">Claude Sonnet 4</div><div class="model-desc">Smart & fast · Recommended</div></div>
           <div class="model-opt" onclick="selModel(this,'claude-haiku-4-5-20251001')"><div class="model-name">Claude Haiku 4.5</div><div class="model-desc">Ultra-fast · Cost efficient</div></div>
         </div>
       </div>
     </div>
-    <div class="modal-foot"><button class="btn-cancel" onclick="closeModal()">Cancel</button><button class="btn-deploy" onclick="deployAgent()">⚡ Deploy Agent</button></div>
+    <div class="modal-foot"><button class="btn-cancel" onclick="closeModal()">Cancel</button><button class="btn-deploy" id="deployBtnText" onclick="deployAgent()">⚡ Deploy Agent</button></div>
   </div>
 </div>
 
@@ -451,7 +451,8 @@ body{background:var(--bg);color:var(--text);font-family:'DM Mono',monospace;disp
 <script>
 // ===== STATE =====
 let agents = [];
-let selectedModel = 'claude-sonnet-4-20250514';
+let selectedModel = 'claude-sonnet-4-5';
+let editingAgentId = null;
 let activeChatAgent = null;
 let chatHistory = [];
 let isSending = false;
@@ -596,6 +597,7 @@ function renderAgents() {
       <div class="ac-desc">${a.description || 'No description yet.'}</div>
       <div class="ac-actions">
         <button class="ac-btn" onclick="testAgent('${a.id}')">💬 Test</button>
+        <button class="ac-btn" onclick="openEditModal('${a.id}')">✏️ Edit</button>
         <button class="ac-btn ${a.is_live ? '' : 'primary'}" onclick="toggleLive('${a.id}')">${a.is_live ? '⏸ Pause' : '▶ Go Live'}</button>
       </div>
     </div>`).join('') + `
@@ -709,33 +711,99 @@ function renderEmbedLinks() {
     </div>`).join('');
 }
 
-// ===== MODAL / DEPLOY =====
+// ===== MODAL / DEPLOY / EDIT =====
 function openModal() {
   const agentLimit = AGENT_LIMITS[currentUser.plan] ?? AGENT_LIMITS.free;
   if (agents.length >= agentLimit) {
     document.getElementById('limitModal').classList.add('open');
     return;
   }
+  editingAgentId = null;
+  document.getElementById('modalTitle').textContent = '🚀 Create New Agent';
+  document.getElementById('deployBtnText').textContent = '⚡ Deploy Agent';
+  document.getElementById('agentName').value = '';
+  document.getElementById('agentEmoji').value = '🤖';
+  document.getElementById('agentDesc').value = '';
+  document.getElementById('agentPrompt').value = '';
+  const opts = document.querySelectorAll('.model-opt');
+  opts.forEach(o => o.classList.remove('sel'));
+  opts[0].classList.add('sel');
+  selectedModel = 'claude-sonnet-4-5';
   document.getElementById('createModal').classList.add('open');
   setTimeout(() => document.getElementById('agentName').focus(), 100);
 }
+
+function openEditModal(id) {
+  const a = agents.find(x => x.id === id);
+  if (!a) return;
+  editingAgentId = id;
+  document.getElementById('modalTitle').textContent = '✏️ Edit Agent';
+  document.getElementById('deployBtnText').textContent = '💾 Save Changes';
+  document.getElementById('agentName').value = a.name;
+  document.getElementById('agentEmoji').value = a.emoji;
+  document.getElementById('agentDesc').value = a.description || '';
+  document.getElementById('agentPrompt').value = a.system_prompt || '';
+  const opts = document.querySelectorAll('.model-opt');
+  opts.forEach(o => o.classList.remove('sel'));
+  if (a.model && a.model.includes('haiku')) {
+    opts[1].classList.add('sel');
+    selectedModel = a.model;
+  } else {
+    opts[0].classList.add('sel');
+    selectedModel = a.model || 'claude-sonnet-4-5';
+  }
+  document.getElementById('createModal').classList.add('open');
+}
+
 function closeLimitModal() { document.getElementById('limitModal').classList.remove('open'); }
 function closeModal() { document.getElementById('createModal').classList.remove('open'); }
 function selModel(el, model) { document.querySelectorAll('.model-opt').forEach(o => o.classList.remove('sel')); el.classList.add('sel'); selectedModel = model; }
 
 async function deployAgent() {
+  const name = document.getElementById('agentName').value.trim();
+  const emoji = document.getElementById('agentEmoji').value.trim() || '🤖';
+  const description = document.getElementById('agentDesc').value.trim();
+  const system_prompt = document.getElementById('agentPrompt').value.trim() || 'You are a helpful assistant.';
+  if (!name) { document.getElementById('agentName').focus(); return; }
+
+  // ===== EDIT MODE — update existing agent, no agent-limit check needed =====
+  if (editingAgentId) {
+    const idToUpdate = editingAgentId;
+    closeModal();
+    const overlay = document.getElementById('deployOverlay');
+    document.querySelector('.deploy-title').textContent = 'Saving Changes...';
+    document.querySelector('.deploy-sub').textContent = 'Updating your agent';
+    overlay.classList.add('open');
+    document.getElementById('deployBar').style.width = '40%';
+
+    const { data, error } = await supabaseClient.from('agents')
+      .update({ name, emoji, description, system_prompt, model: selectedModel })
+      .eq('id', idToUpdate).eq('user_id', currentUser.id)
+      .select().single();
+
+    document.getElementById('deployBar').style.width = '100%';
+    setTimeout(() => {
+      overlay.classList.remove('open');
+      document.getElementById('deployBar').style.width = '0%';
+      document.querySelector('.deploy-title').textContent = 'Deploying Agent...';
+      document.querySelector('.deploy-sub').textContent = 'Saving your agent to AgentHost';
+      if (error) { notify('⚠ Could not save changes'); console.error(error); editingAgentId = null; return; }
+      const idx = agents.findIndex(x => x.id === idToUpdate);
+      if (idx !== -1) agents[idx] = data;
+      editingAgentId = null;
+      notify(`${emoji} ${name} updated successfully!`);
+      nav('agents', document.querySelectorAll('.sb-item')[1]);
+    }, 500);
+    return;
+  }
+
+  // ===== CREATE MODE — original behavior =====
   const agentLimit = AGENT_LIMITS[currentUser.plan] ?? AGENT_LIMITS.free;
   if (agents.length >= agentLimit) {
     closeModal();
     document.getElementById('limitModal').classList.add('open');
     return;
   }
-
-  const name = document.getElementById('agentName').value.trim();
-  const emoji = document.getElementById('agentEmoji').value.trim() || '🤖';
-  const description = document.getElementById('agentDesc').value.trim();
-  const system_prompt = document.getElementById('agentPrompt').value.trim() || 'You are a helpful assistant.';
-  if (!name) { document.getElementById('agentName').focus(); return; }
 
   closeModal();
   const overlay = document.getElementById('deployOverlay');
