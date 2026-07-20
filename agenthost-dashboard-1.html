@@ -210,13 +210,19 @@ body{background:var(--bg);color:var(--text);font-family:'DM Mono',monospace;disp
     if (!session) { window.location.href = "/agenthost-auth.html"; return; }
 
     accessToken = session.access_token;
-    const { data: userRow, error } = await supabaseClient
-      .from("users")
-      .select("plan, subscription_status, trial_ends_at, email")
-      .eq("id", session.user.id)
-      .single();
 
-    if (error || !userRow) { window.location.href = "/agenthost-auth.html"; return; }
+      let userRow = null;
+      for (let attempt = 0; attempt < 4; attempt++) {
+        const { data } = await supabaseClient
+          .from("users")
+          .select("plan, subscription_status, trial_ends_at, email")
+          .eq("id", session.user.id)
+          .single();
+        if (data) { userRow = data; break; }
+        await new Promise(r => setTimeout(r, 700));
+      }
+
+      if (!userRow) { window.location.href = "/agenthost-auth.html"; return; }
 
     // Free plan no longer expires by time. Only an explicitly canceled/expired
     // paid subscription blocks access now — free users always get in and are
