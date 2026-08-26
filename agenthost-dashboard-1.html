@@ -211,18 +211,18 @@ body{background:var(--bg);color:var(--text);font-family:'DM Mono',monospace;disp
 
     accessToken = session.access_token;
 
-      let userRow = null;
-      for (let attempt = 0; attempt < 4; attempt++) {
-        const { data } = await supabaseClient
-          .from("users")
-          .select("plan, subscription_status, trial_ends_at, email")
-          .eq("id", session.user.id)
-          .single();
-        if (data) { userRow = data; break; }
-        await new Promise(r => setTimeout(r, 700));
-      }
+    let userRow = null;
+    for (let attempt = 0; attempt < 4; attempt++) {
+      const { data } = await supabaseClient
+        .from("users")
+        .select("plan, subscription_status, trial_ends_at, email")
+        .eq("id", session.user.id)
+        .single();
+      if (data) { userRow = data; break; }
+      await new Promise(r => setTimeout(r, 700));
+    }
 
-      if (!userRow) { window.location.href = "/agenthost-auth.html"; return; }
+    if (!userRow) { window.location.href = "/agenthost-auth.html"; return; }
 
     // Free plan no longer expires by time. Only an explicitly canceled/expired
     // paid subscription blocks access now — free users always get in and are
@@ -376,8 +376,8 @@ body{background:var(--bg);color:var(--text);font-family:'DM Mono',monospace;disp
     <div class="view" id="view-embed">
       <div class="embed-layout">
         <div class="embed-card">
-          <div class="embed-title">📱 Your Agent IDs</div>
-          <div class="embed-sub">Use these with the embed script or REST API. Full embed docs coming as agent hosting URLs go live.</div>
+          <div class="embed-title">🔗 Embed Your Agent</div>
+          <div class="embed-sub">Paste this snippet just before the closing &lt;/body&gt; tag on any website. A chat bubble will appear in the corner — works on WordPress, Webflow, Wix, Shopify, or any custom site.</div>
           <div id="embedLinks"><div class="empty-state">No agents yet.</div></div>
         </div>
       </div>
@@ -709,12 +709,31 @@ async function renderAnalytics() {
 // ===== EMBED =====
 function renderEmbedLinks() {
   const el = document.getElementById('embedLinks');
-  el.innerHTML = agents.length === 0 ? `<div class="empty-state">No agents yet.</div>` : agents.map(a => `
-    <div style="display:flex;align-items:center;gap:12px;padding:12px;background:var(--bg);border:1px solid var(--border2);border-radius:8px;margin-bottom:8px">
-      <span>${a.emoji}</span>
-      <div style="flex:1"><div style="font-family:'Syne',sans-serif;font-weight:600;font-size:.82rem">${a.name}</div><div style="font-size:.7rem;color:var(--accent2)">Agent ID: ${a.id}</div></div>
-      <button onclick="navigator.clipboard.writeText('${a.id}');notify('Agent ID copied!')" style="background:var(--border2);border:none;color:var(--muted2);font-size:.65rem;padding:6px 12px;border-radius:4px;cursor:pointer">Copy</button>
-    </div>`).join('');
+  if (agents.length === 0) { el.innerHTML = `<div class="empty-state">No agents yet.</div>`; return; }
+  el.innerHTML = agents.map((a, i) => {
+    const snippet = `<script src="https://myagenthost.app/widget.js" data-agent="${a.id}"><\/script>`;
+    const escaped = snippet.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+    return `
+    <div style="padding:16px;background:var(--bg);border:1px solid var(--border2);border-radius:8px;margin-bottom:12px">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">
+        <span>${a.emoji}</span>
+        <div style="font-family:'Syne',sans-serif;font-weight:600;font-size:.85rem">${a.name}</div>
+        <span style="margin-left:auto;font-size:.65rem;color:${a.is_live ? 'var(--accent)' : 'var(--muted)'}">${a.is_live ? 'LIVE' : 'PAUSED'}</span>
+      </div>
+      <div style="background:var(--card);border:1px solid var(--border2);border-radius:6px;padding:12px;font-size:.72rem;color:var(--accent2);overflow-x:auto;white-space:pre;font-family:'DM Mono',monospace">${escaped}</div>
+      <button class="embed-copy-btn" data-snippet-index="${i}" style="margin-top:10px;background:var(--border2);border:none;color:var(--muted2);font-size:.7rem;padding:8px 14px;border-radius:4px;cursor:pointer">Copy embed code</button>
+    </div>`;
+  }).join('');
+
+  document.querySelectorAll('.embed-copy-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const idx = parseInt(btn.getAttribute('data-snippet-index'), 10);
+      const a = agents[idx];
+      const snippet = `<script src="https://myagenthost.app/widget.js" data-agent="${a.id}"><\/script>`;
+      navigator.clipboard.writeText(snippet);
+      notify('Embed code copied!');
+    });
+  });
 }
 
 // ===== MODAL / DEPLOY / EDIT =====
@@ -849,3 +868,4 @@ function escHtml(s) { return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replac
 </script>
 </body>
 </html>
+
