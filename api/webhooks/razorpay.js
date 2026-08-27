@@ -35,6 +35,8 @@ function verifySignature(rawBody, signature, secret) {
   return expected === signature;
 }
 
+// Returns the array of updated rows. An empty array means no user in our
+// database had that exact email — the caller must check for this.
 async function updateUserByEmail(email, plan) {
   const res = await fetch(
     `${process.env.SUPABASE_URL}/rest/v1/users?email=eq.${encodeURIComponent(email)}`,
@@ -50,6 +52,21 @@ async function updateUserByEmail(email, plan) {
         plan,
         subscription_status: "active",
       }),
+    }
+  );
+  return res.json();
+}
+
+// Case-insensitive fallback lookup — used only to confirm/deny whether the
+// email exists at all under different casing, so the log message is precise.
+async function findUserByEmailCaseInsensitive(email) {
+  const res = await fetch(
+    `${process.env.SUPABASE_URL}/rest/v1/users?email=ilike.${encodeURIComponent(email)}&select=id,email`,
+    {
+      headers: {
+        apikey: process.env.SUPABASE_SERVICE_ROLE_KEY,
+        Authorization: `Bearer ${process.env.SUPABASE_SERVICE_ROLE_KEY}`,
+      },
     }
   );
   return res.json();
@@ -99,7 +116,39 @@ export default async function handler(req, res) {
       return res.status(200).json({ received: true, handled: false, reason: "unrecognized amount" });
     }
 
-    await updateUserByEmail(email, plan);
+    const updated = await updateUserByEmail(email, plan);
+
+    // ===== CRITICAL CHECK — was any row actually updated? =====
+    // Supabase returns an empty array (not an error) when the WHERE clause
+    // matches nothing. Without this check, a typo'd or mismatched email at
+    // checkout silently takes the customer's money with no plan upgrade,
+    // and nothing here would ever show it failed.
+    if (!Array.isArray(updated) || updated.length === 0) {
+      // Log loudly — this is the one thing that must show up in Vercel logs.
+      console.error(
+        `PAYMENT RECEIVED BUT NOT APPLIED — no user found with email "${email}" for payment ${payment.id} (amount ${amount}, plan ${plan}). Customer paid but their plan was NOT upgraded. Needs manual fix.`
+      );
+
+      // Best-effort: check if it's just a casing mismatch, to make the
+      // manual fix faster when someone reads this log later.
+      const caseMatch = await findUserByEmailCaseInsensitive(email).catch(() => []);
+      if (Array.isArray(caseMatch) && caseMatch.length > 0) {
+        console.error(
+          `Possible casing mismatch — found account with email "${caseMatch[0].email}" (id ${caseMatch[0].id}). Payment email was "${email}".`
+        );
+      } else {
+        console.error(`No account found under any casing for "${email}". Payment email may not match any signup at all.`);
+      }
+
+      return res.status(200).json({
+        received: true,
+        handled: false,
+        reason: "no matching user for email — payment captured but plan not applied",
+        email,
+        plan,
+        payment_id: payment.id,
+      });
+    }
 
     return res.status(200).json({ received: true, handled: true, email, plan });
   } catch (err) {
@@ -110,4 +159,3 @@ export default async function handler(req, res) {
     return res.status(200).json({ received: true, handled: false, error: "internal" });
   }
 }
-
