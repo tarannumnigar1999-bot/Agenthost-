@@ -4,7 +4,7 @@
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 <title>AgentHost AI — Sign Up / Login</title>
-<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Mono:wght@300;400;500&display=swap" rel="stylesheet"/>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
 :root {
   --bg: #05050a;
@@ -26,6 +26,7 @@ body{
   font-family:'DM Mono',monospace;
   display:flex;align-items:center;justify-content:center;
   min-height:100vh;overflow:hidden;position:relative;
+  visibility:hidden;
 }
 
 /* GRID BG */
@@ -208,6 +209,13 @@ body::before{
 }
 .forgot-link:hover{color:var(--accent);}
 
+/* CHECKING SESSION SCREEN */
+.checking-screen{
+  position:fixed;inset:0;background:var(--bg);z-index:20;
+  display:flex;align-items:center;justify-content:center;
+  color:var(--muted2);font-size:.85rem;
+}
+
 @media(max-width:480px){
   .auth-card{padding:28px 24px;margin:16px;}
   .plan-grid{grid-template-columns:1fr 1fr 1fr;}
@@ -240,8 +248,8 @@ body::before{
 
   <!-- SIGNUP FORM -->
   <div id="signupForm">
-    <div class="auth-title">Start your free trial</div>
-    <div class="auth-sub">14 days free · No credit card · Cancel anytime</div>
+    <div class="auth-title">Get started free</div>
+    <div class="auth-sub">1 AI agent, free forever · No credit card required</div>
 
     <div class="field">
       <label>Full Name</label>
@@ -266,8 +274,8 @@ body::before{
       <div class="plan-grid">
         <label class="plan-opt selected" onclick="selectPlan(this,'free')">
           <input type="radio" name="plan" value="free" checked/>
-          <span class="plan-name">Free Trial</span>
-          <span class="plan-price">14 days</span>
+          <span class="plan-name">Free</span>
+          <span class="plan-price">Forever</span>
         </label>
         <label class="plan-opt" onclick="selectPlan(this,'pro')">
           <input type="radio" name="plan" value="pro"/>
@@ -341,7 +349,7 @@ body::before{
     </button>
 
     <div class="auth-footer">
-      Don't have an account? <a href="#" onclick="switchTab('signup',document.querySelectorAll('.tab-btn')[0])">Start free trial →</a>
+      Don't have an account? <a href="#" onclick="switchTab('signup',document.querySelectorAll('.tab-btn')[0])">Get started free →</a>
     </div>
   </div>
 
@@ -357,11 +365,30 @@ body::before{
 
 </div>
 
+<div class="checking-screen" id="checkingScreen">Checking your session…</div>
+
 <script>
 // ─── SUPABASE CONFIG ─────────────────────────────────────────────────────────
-// Replace these with your actual Supabase values
 const SUPABASE_URL = 'https://cdhkzvpwmkcbxrvqujhb.supabase.co';
-const SUPABASE_ANON_KEY = 'sb_publishable_mScm4_dfvFTqNiBctoljKA_V9uFdhUG';
+const SUPABASE_ANON_KEY = 'sb_publishable_mScm4_dfvFTqNiBctoljKA_V9uFdhU6';
+const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+// ─── SESSION CHECK — runs first, before showing the form ────────────────────
+// This is the real fix: check the actual Supabase session (which Google
+// login creates) instead of a separate localStorage flag that Google login
+// never set. Without this, Google-signed-in users always landed back on
+// this signup screen instead of being recognized as already logged in.
+async function checkExistingSession() {
+  const { data: { session } } = await supabaseClient.auth.getSession();
+  if (session) {
+    window.location = '/agenthost-dashboard-1.html';
+    return;
+  }
+  document.getElementById('checkingScreen').style.display = 'none';
+  document.body.style.visibility = 'visible';
+}
+checkExistingSession();
+
 // ─── HELPERS ─────────────────────────────────────────────────────────────────
 function showError(msg) {
   document.getElementById('errorText').textContent = msg;
@@ -423,45 +450,29 @@ async function handleSignup() {
   setLoading('signupBtn', true, 'Create Account →');
 
   try {
-    // Sign up with Supabase
-    const res = await fetch(`${SUPABASE_URL}/auth/v1/signup`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'apikey': SUPABASE_ANON_KEY,
-      },
-      body: JSON.stringify({
-        email,
-        password,
-        data: { full_name: name, plan: selectedPlan }
-      })
+    const { data, error } = await supabaseClient.auth.signUp({
+      email,
+      password,
+      options: { data: { full_name: name, plan: selectedPlan } },
     });
 
-    const data = await res.json();
-
-    if (data.error) {
-      showError(data.error.message || 'Signup failed. Please try again.');
+    if (error) {
+      showError(error.message || 'Signup failed. Please try again.');
       setLoading('signupBtn', false, 'Create Account →');
       return;
     }
 
-    // Save token
-    if (data.access_token) {
-      localStorage.setItem('ah_token', data.access_token);
-      localStorage.setItem('ah_user', JSON.stringify({ email, name, plan: selectedPlan }));
-    }
-
     // If paid plan → redirect to payment
     if (selectedPlan === 'pro') {
-      window.location = 'https://rzp.io/l/agenthost-pro';
+      window.location = 'https://rzp.io/rzp/oGEgQ97R';
       return;
     }
     if (selectedPlan === 'agency') {
-      window.location = 'https://rzp.io/l/agenthost-agency';
+      window.location = 'https://rzp.io/rzp/QjbmB3vr';
       return;
     }
 
-    // Free trial → show success
+    // Free plan → show success
     setLoading('signupBtn', false, 'Create Account →');
     document.getElementById('signupForm').style.display = 'none';
     document.getElementById('successScreen').style.display = 'block';
@@ -488,25 +499,13 @@ async function handleLogin() {
   setLoading('loginBtn', true, 'Sign In →');
 
   try {
-    const res = await fetch(`${SUPABASE_URL}/auth/v1/token?grant_type=password`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'apikey': SUPABASE_ANON_KEY,
-      },
-      body: JSON.stringify({ email, password })
-    });
+    const { data, error } = await supabaseClient.auth.signInWithPassword({ email, password });
 
-    const data = await res.json();
-
-    if (data.error || !data.access_token) {
-      showError(data.error_description || 'Invalid email or password.');
+    if (error) {
+      showError(error.message || 'Invalid email or password.');
       setLoading('loginBtn', false, 'Sign In →');
       return;
     }
-
-    localStorage.setItem('ah_token', data.access_token);
-    localStorage.setItem('ah_user', JSON.stringify({ email }));
 
     setLoading('loginBtn', false, 'Sign In →');
     document.getElementById('loginForm').style.display = 'none';
@@ -532,12 +531,7 @@ async function handleForgot() {
   const email = document.getElementById('loginEmail').value.trim();
   if (!email) return showError('Enter your email first, then click Forgot password.');
 
-  const res = await fetch(`${SUPABASE_URL}/auth/v1/recover`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_ANON_KEY },
-    body: JSON.stringify({ email })
-  });
-
+  await supabaseClient.auth.resetPasswordForEmail(email);
   showSuccess(`Password reset email sent to ${email}`);
 }
 
@@ -553,12 +547,6 @@ document.addEventListener('keydown', e => {
 // ─── AUTO SWITCH TO LOGIN IF #login IN URL ───────────────────────────────────
 if (window.location.hash === '#login') {
   switchTab('login', document.querySelectorAll('.tab-btn')[1]);
-}
-
-// ─── CHECK IF ALREADY LOGGED IN ──────────────────────────────────────────────
-const token = localStorage.getItem('ah_token');
-if (token) {
-  window.location = '/agenthost-dashboard-1.html';
 }
 </script>
 </body>
